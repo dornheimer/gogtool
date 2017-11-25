@@ -1,5 +1,9 @@
+import logging
 import os
 import subprocess
+
+
+logger = logging.getLogger(__name__)
 
 
 class Game:
@@ -7,50 +11,75 @@ class Game:
         self.name = name
         self.game_info = game_info
         self.local_path = local_path
-
-        self.update = False
-        self.old_files = []
         self.installers = self._get_installers()
-        self.platform = 4 if 4 in self.installers else 1
+        self.dlc = self._get_dlc()
+        self.update = False
+        self.old_files = set()
 
     @property
     def local_files(self):
         file_names = os.listdir(self.local_path)
         return [fn for fn in file_names if fn.startswith(('gog', 'setup', self.name))]
 
-    def _get_installers(self, platforms={4, 1}, id_prefix='en'):
+    @property
+    def platform(self):
+        return 4 if 4 in self.installers else 1
+
+    def _extract_from_game_info(self, key, platforms={4, 1}, id_prefix='en'):
+        values = {}
+        try:
+            for v in self.game_info[key]:
+                if v['platform'] in platforms and v['id'].startswith(id_prefix):
+                    values.setdefault(v['platform'], []).append(v['path'])
+            logger.debug(f"{key} found for {self.name}")
+            return values
+        except KeyError:
+            logger.debug(f"No {key} for {self.name} found.")
+            return None
+
+    def _get_installers(self):
         """Return installers for the game (linux and windows.)"""
-        installers = {}
-        for inst in self.game_info['installers']:
-            if inst['platform'] in platforms and inst['id'].startswith(id_prefix):
-                installers.setdefault(inst['platform'], []).append(inst['path'])
-        return installers
+        return self._extract_from_game_info("installers")
+
+    def _get_dlc(self):
+        """Return dlc for the game (linux and windows.)"""
+        return self._extract_from_game_info("dlcs")
 
     def check_for_update(self):
         """Compare local files to those on the server."""
+        logger.info(f"Checking {self.name} for updates...")
+
         server_path = self.installers[self.platform]
+        logger.debug(f"Server path for {self.name} is: {server_path}")
+
         server_files = [os.path.basename(sp) for sp in server_path]
 
         if not all([(sf in self.local_files) for sf in server_files]):
             self.update = True
-            self.old_files.append(self.local_files)
+            old = [lf for lf in self.local_files if lf not in server_files]
+            self.old_files.update(old)
 
         return self.update
 
     def download(self):
         """Download newer versions of the game's setup files."""
+        logger.debug(f"{self.name}.update == {self.update}")
         if self.update:
             if self.platform == 1:
+                logger.debug(f"Platform for {self.name} is 'w'")
                 update_args = ["lgogdownloader", "--platform", "w", "--download", "--game", self.name]
-            else:
+            if self.platform == 4:
+                logger.debug(f"Platform for {self.name} is 'l'")
                 update_args = ["lgogdownloader", "--download", "--game", self.name]
-            print(f'Downloading file(s) for {self.name}...')
+
+            logger.info(f'Downloading file(s) for {self.name}...')
             update_files = subprocess.Popen(update_args, stdout=subprocess.PIPE)
             stdout, _ = update_files.communicate()
             out = stdout.decode('utf-8')
+            logger.info("Download complete.")
 
     def __str__(self):
         return self.name
 
     def __repr__(self):
-        return f"""{cls.__name__}({self.name}, {self.game_info}, {self.local_path})"""
+        return f"""{self.cls.__name__}({self.name}, {self.game_info}, {self.local_path})"""

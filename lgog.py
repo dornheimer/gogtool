@@ -1,4 +1,5 @@
 import argparse
+import logging
 import json
 import os
 import subprocess
@@ -22,12 +23,16 @@ def check_input(prompt, choices={'y', 'n'}):
     return choice
 
 
-def get_games_data():
+def get_games_data(data_path):
     """Get game details from lgogdownloader json file."""
-    data_path = os.path.join(HOME, ".cache/lgogdownloader/gamedetails.json")
-    with open(data_path) as data:
-        games_data = json.load(data)["games"]
+    try:
+        with open(data_path) as data:
+            games_data = json.load(data)["games"]
+    except FileNotFoundError:
+        logger.error(f"Game details data not found in {data_path}", exc_info=True)
+        sys.exit()
 
+    logger.debug(f"Game details data found in {data_path}")
     return games_data
 
 
@@ -71,7 +76,6 @@ def get_game_info(game, games_data):
 
 
 def parse_command_line():
-    """Get args from command line."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--all", action="store_true",
                         help="download newer versions for all games found in default directory")
@@ -81,8 +85,8 @@ def parse_command_line():
                         help="delete outdated setup files after update")
     parser.add_argument("--list", action="store_true",
                         help="list outdated setup files")
-    parser.add_argument("--log", nargs="?", type=argparse.FileType('w'), default=sys.stdout,
-                        help="save output to log file")
+    # parser.add_argument("--log", nargs="?", type=argparse.FileType('w'), default=sys.stdout,
+    #                     help="save output to log file")
     parser.add_argument("--verbose", action="store_true",
                         help="print more information")
     parser.add_argument("--platform", nargs="+", choices={'1', '2', '4'}, default={'4', '1'},
@@ -92,7 +96,10 @@ def parse_command_line():
     parser.add_argument("--clean", action="store_true",
                         help="delete orphaned setup files")
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    logger.debug(f"Running with args: {args}")
+
+    return args
 
 
 def parse_config(path, key=None):
@@ -101,8 +108,14 @@ def parse_config(path, key=None):
         lines = config_file.readlines()
         config_dict = dict(line.strip().split(" = ") for line in lines)
     if key:
-        return config_dict[key]
+        try:
+            key_value = config_dict[key]
+            logger.debug(f"Succesfully parsed config file with key: '{key}'")
+            return key_value
+        except KeyError:
+            logger.error(f"Invalid key: '{key}'", exc_info=True)
 
+    logger.debug("Succesfully parsed config file.")
     return config_dict
 
 
@@ -110,12 +123,18 @@ def main():
     # get args from command line
     args = parse_command_line()
 
-    # get download directory from lgog config
-    config_path = os.path.join(HOME, '.config/lgogdownloader/config.cfg')
-    games_data = get_games_data()
+    # update game details cache
+    if args.update:
+        logger.info("Running 'lgogdownloader --update-cache'...")
+        update_cache = subprocess.Popen(["lgogdownloader", "--update-cache"], stdout=subprocess.PIPE)
+        stdout, _ = update_cache.communicate()
+        sys.exit(logger.info("Completed update."))
 
-    download_directory = DownloadDir(parse_config(config_path, 'directory'))
-    print(f'Download directory is: {download_directory}')
+    # get download directory from lgog config
+    games_data = get_games_data(DATA_PATH)
+
+    download_directory = DownloadDir(parse_config(CONFIG_PATH, 'directory'))
+    logger.info(f'Download directory is: {download_directory.path}')
 
     local_games = []
     for game in download_directory.games:
@@ -128,17 +147,12 @@ def main():
     print("\nGames with outdated setup files:")
     print("\n".join([g.name for g in update]), end="\n\n")
 
-    # update game details cache
-    if args.update:
-        print("Running 'lgogdownloader --update-cache'...")
-        update_cache = subprocess.Popen(["lgogdownloader", "--update-cache"], stdout=subprocess.PIPE)
-        stdout, _ = update_cache.communicate()
-
     if args.clean:
         print("Cleaning outdated setup files...")
-        for g, p, lf in update:
-            delete_files(download_directory, g, lf)
-        sys.exit('Done.')
+        for game in update:
+            download_directory.delete_files(game)
+        print("Done.")
+        sys.exit()
 
     if not args.all:
         # ask for download confirmation by default
@@ -156,12 +170,21 @@ def main():
         if delete_conf == 'y':
             print("Deleting files...")
             for game in update:
-                download_directory.delete_files(game.name)
+                download_directory.delete_files(game)
 
-    print('\nDone.')
+    print('Done.')
 
 
 if __name__ == '__main__':
 
     HOME = os.environ['HOME']
-    sys.exit(main())
+    DATA_PATH = os.path.join(HOME, ".cache/lgogdownloader/gamedetails.json")
+    CONFIG_PATH = os.path.join(HOME, '.config/lgogdownloader/config.cfg')
+
+    logging.basicConfig(format="%(name)s:%(levelname)s: %(message)s", level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        logging.info("Aborted by user.")
