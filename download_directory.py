@@ -20,11 +20,13 @@ class DownloadDir:
         """Scan local download directory and return a list of downloaded games
         (folder names are game identifiers)."""
         logger.info("Scanning local directory for downloaded games...")
+
         return os.listdir(self.path)
 
     def _scan_for_setup_files(self):
         """Update files dictionary with setup files for each game."""
         logger.info("Scanning local directory for setup files...")
+
         files = {}
         for game_name in self._scan_for_games():
             game_path = os.path.join(self.path, game_name)
@@ -41,6 +43,7 @@ class DownloadDir:
     def delete_files(self, game):
         """Delete all files of specified game."""
         logging.info(f"Deleting files for {game}")
+
         for fn in self.files[game.name]:
             file_path = os.path.join(self.path, game.name, fn)
             logger.debug(f"file_path for {game} is: {file_path}")

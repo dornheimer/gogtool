@@ -23,6 +23,22 @@ def check_input(prompt, choices={'y', 'n'}):
     return choice
 
 
+def check_local_files(games_data, download_directory):
+    local_games = []
+    for game in download_directory.games:
+        local_games.append(Game(game,
+                                get_game_info(game, games_data),
+                                download_directory.files[game]["local_path"]))
+
+    # check every game and add to list if an update is available
+    games_with_update = [lg for lg in local_games if lg.check_for_update()]
+    print("\nGames with outdated setup files:")
+    print("\n".join([g.name for g in games_with_update]), end="\n\n")
+
+    logger.debug(f"{len(games_with_update)} games with updates")
+    return games_with_update
+
+
 def get_games_data(data_path):
     """Get game details from lgogdownloader json file."""
     try:
@@ -40,39 +56,11 @@ def get_game_info(game, games_data):
     for title in games_data:
         if title['gamename'] == game:
 
+            logger.debug(f"Game info for {game} found")
             return title
 
-
-# def check_for_update(games, games_data, download_dir, verbose=False):
-#     """Check if local file names match those on the server."""
-#     update = []
-#     print("\nChecking local files...")
-#     for game in games:
-#         file_names = os.listdir(os.path.join(download_dir, game))
-#         local_files = [fn for fn in file_names if fn.startswith(('gog', 'setup', game))]
-#
-#         # prefer linux installer (compare win files otherwise)
-#         if get_installer_info(game, games_data).get(4):
-#             server_path = get_installer_info(game, games_data)[4]
-#             platform = 'linux'
-#         else:
-#             server_path = get_installer_info(game, games_data)[1]
-#             platform = 'windows'
-#
-#         server_files = [os.path.basename(sp) for sp in server_path]
-#
-#         if all([(sf in local_files) for sf in server_files]):
-#             if verbose:
-#                 print(f'\n{game} is up-to-date.')
-#         else:
-#             if verbose:
-#                 print(f'\nFiles for {game} do not match:')
-#                 print("local: " + ", ".join(local_files))
-#                 print("server: " + ", ".join(server_files))
-#
-#             update.append((game, platform, local_files))
-#
-#         return update
+    logger.warning(f"Game info for {game} not found")
+    return None
 
 
 def parse_command_line():
@@ -85,8 +73,8 @@ def parse_command_line():
                         help="delete outdated setup files after update")
     parser.add_argument("--list", action="store_true",
                         help="list outdated setup files")
-    # parser.add_argument("--log", nargs="?", type=argparse.FileType('w'), default=sys.stdout,
-    #                     help="save output to log file")
+    parser.add_argument("--log", action="store_true",
+                        help="save output to log file")
     parser.add_argument("--verbose", action="store_true",
                         help="print more information")
     parser.add_argument("--platform", nargs="+", choices={'1', '2', '4'}, default={'4', '1'},
@@ -96,10 +84,7 @@ def parse_command_line():
     parser.add_argument("--clean", action="store_true",
                         help="delete orphaned setup files")
 
-    args = parser.parse_args()
-    logger.debug(f"Running with args: {args}")
-
-    return args
+    return parser.parse_args()
 
 
 def parse_config(path, key=None):
@@ -115,61 +100,52 @@ def parse_config(path, key=None):
         except KeyError:
             logger.error(f"Invalid key: '{key}'", exc_info=True)
 
-    logger.debug("Succesfully parsed config file.")
+    logger.debug("Succesfully parsed config file")
     return config_dict
 
 
-def main():
-    # get args from command line
-    args = parse_command_line()
+def main(args):
+    logger.debug(f"Running with args: {args}")
 
-    # update game details cache
     if args.update:
+        # Update game details cache
         logger.info("Running 'lgogdownloader --update-cache'...")
         update_cache = subprocess.Popen(["lgogdownloader", "--update-cache"], stdout=subprocess.PIPE)
         stdout, _ = update_cache.communicate()
-        sys.exit(logger.info("Completed update."))
+        logger.info("Completed update")
+        sys.exit()
 
-    # get download directory from lgog config
     games_data = get_games_data(DATA_PATH)
 
+    # Get download directory from lgog config
     download_directory = DownloadDir(parse_config(CONFIG_PATH, 'directory'))
     logger.info(f'Download directory is: {download_directory.path}')
 
-    local_games = []
-    for game in download_directory.games:
-        local_games.append(Game(game,
-                                get_game_info(game, games_data),
-                                download_directory.files[game]["local_path"]))
-
-    # check every game and add to list if an update is available
-    update = [lg for lg in local_games if lg.check_for_update()]
-    print("\nGames with outdated setup files:")
-    print("\n".join([g.name for g in update]), end="\n\n")
+    games_with_update = check_local_files(games_data, download_directory)
 
     if args.clean:
         print("Cleaning outdated setup files...")
-        for game in update:
+        for game in games_with_update:
             download_directory.delete_files(game)
         print("Done.")
         sys.exit()
 
     if not args.all:
-        # ask for download confirmation by default
-        for game in update:
+        # Ask for download confirmation by default
+        for game in games_with_update:
             choice = check_input(f'Re-download file(s) for {game.name}? (y/n) ')
             if choice == "n":
                 game.update = False
 
-    # download files for every selected game
-    for game in update:
+    # Download files for every selected game
+    for game in games_with_update:
         game.download()
 
     if args.delete:
         delete_conf = check_input("\nDelete old setup files? (y/n) ")
         if delete_conf == 'y':
             print("Deleting files...")
-            for game in update:
+            for game in games_with_update:
                 download_directory.delete_files(game)
 
     print('Done.')
@@ -181,10 +157,33 @@ if __name__ == '__main__':
     DATA_PATH = os.path.join(HOME, ".cache/lgogdownloader/gamedetails.json")
     CONFIG_PATH = os.path.join(HOME, '.config/lgogdownloader/config.cfg')
 
-    logging.basicConfig(format="%(name)s:%(levelname)s: %(message)s", level=logging.DEBUG)
+    # Get args from command line
+    args = parse_command_line()
+
+    # Parameters for .log file
+    file_name = None
+    file_mode = None
+
+    if args.log:
+        file_name = "lgog.log"
+        file_mode = "w"
+
+    logging.basicConfig(
+        filename=file_name,
+        filemode=file_mode,
+        format="%(levelname)s:%(name)s:[%(funcName)s]: %(message)s",
+        level=logging.DEBUG
+        )
+    # Discard all DEBUG messages to effectively set the level to INFO
+    logging.disable(logging.DEBUG)
+
+    if args.verbose:
+        # Remove restriction on logging, returning to the 'original' level DEBUG
+        logging.disable(logging.NOTSET)
+
     logger = logging.getLogger(__name__)
 
     try:
-        sys.exit(main())
+        sys.exit(main(args))
     except KeyboardInterrupt:
-        logging.info("Aborted by user.")
+        logger.info("Aborted by user (ctrl+c)")

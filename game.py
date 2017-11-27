@@ -19,7 +19,10 @@ class Game:
     @property
     def local_files(self):
         file_names = os.listdir(self.local_path)
-        return [fn for fn in file_names if fn.startswith(('gog', 'setup', self.name))]
+        game_name = self.name.split("_")[0]
+        prefixes = ('gog', 'setup', self.name, game_name)
+
+        return [fn for fn in file_names if fn.startswith(prefixes)]
 
     @property
     def platform(self):
@@ -34,7 +37,7 @@ class Game:
             logger.debug(f"{key} found for {self.name}")
             return values
         except KeyError:
-            logger.debug(f"No {key} for {self.name} found.")
+            logger.debug(f"No {key} for {self.name} found")
             return None
 
     def _get_installers(self):
@@ -50,10 +53,11 @@ class Game:
         logger.info(f"Checking {self.name} for updates...")
 
         server_path = self.installers[self.platform]
-        logger.debug(f"Server path for {self.name} is: {server_path}")
+        logger.debug(f"Server path for {self.name} is: {''.join(server_path)}")
 
         server_files = [os.path.basename(sp) for sp in server_path]
 
+        logger.debug(f"Local files for {self.name}: {', '.join(self.local_files)}")
         if not all([(sf in self.local_files) for sf in server_files]):
             self.update = True
             old = [lf for lf in self.local_files if lf not in server_files]
@@ -76,7 +80,7 @@ class Game:
             update_files = subprocess.Popen(update_args, stdout=subprocess.PIPE)
             stdout, _ = update_files.communicate()
             out = stdout.decode('utf-8')
-            logger.info("Download complete.")
+            logger.info("Download complete")
 
     def __str__(self):
         return self.name
