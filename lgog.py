@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import argparse
 import logging
 import json
@@ -5,11 +7,8 @@ import os
 import subprocess
 import sys
 
-
 from download_directory import DownloadDir
 from game import Game
-
-# FUNCTIONS: UPDATE, CLEAN, (logfile, verbose, platform, download_directory, delete_files, )
 
 
 def check_input(prompt, choices={'y', 'n'}):
@@ -39,20 +38,40 @@ def check_local_files(games_data, download_directory):
     return games_with_update
 
 
-def get_games_data(data_path):
+def get_games_details(data_path):
     """Get game details from lgogdownloader json file."""
     try:
         with open(data_path) as data:
-            games_data = json.load(data)["games"]
+            games_details = json.load(data)
     except FileNotFoundError:
         logger.error(f"Game details data not found in {data_path}", exc_info=True)
         sys.exit()
 
     logger.debug(f"Game details data found in {data_path}")
-    return games_data
+    return games_details
+
+
+def is_outdated(games_details):
+    logger.info("Checking games data creation date...")
+
+    gd_creation_date = datetime.strptime(games_details["date"], "%Y%m%dT%H%M%S")
+    gd_days_since_last_update = (datetime.now() - gd_creation_date).days
+    outdated = gd_days_since_last_update >= 2
+
+    str_outdated = "needs update" if outdated else "ok"
+    logger.debug("gamedetails.json created on: {}, age: {} days ({})".format(
+                gd_creation_date.strftime('%Y%m%d'), gd_days_since_last_update, str_outdated))
+
+    if outdated:
+        print("Games data is outdated. Updating...")
+    else:
+        print("Games data is up-to-date.")
+
+    return outdated
 
 
 def get_game_info(game, games_data):
+    """Check if folder name of game is actually known."""
     for title in games_data:
         if title['gamename'] == game:
 
@@ -104,20 +123,45 @@ def parse_config(path, key=None):
     return config_dict
 
 
+def setup_logging(args):
+    file_name = None
+    file_mode = None
+
+    if args.log:
+        file_name = "lgog.log"
+        file_mode = "w"
+
+    logging.basicConfig(
+        filename=file_name,
+        filemode=file_mode,
+        format="%(levelname)s:%(name)s:[%(funcName)s]: %(message)s",
+        level=logging.DEBUG
+        )
+    # Discard all DEBUG messages to effectively set the level to INFO
+    logging.disable(logging.DEBUG)
+
+    if args.verbose:
+        # Remove restriction on logging, returning to the 'original' level DEBUG
+        logging.disable(logging.NOTSET)
+
+    return logging.getLogger(__name__)
+
+
 def main(args):
     logger.debug(f"Running with args: {args}")
 
-    if args.update:
+    games_details = get_games_details(DATA_PATH)
+
+    # Automatically run update if games_details is outdated
+    if args.update or is_outdated(games_details):
         # Update game details cache
         logger.info("Running 'lgogdownloader --update-cache'...")
         update_cache = subprocess.Popen(["lgogdownloader", "--update-cache"], stdout=subprocess.PIPE)
         stdout, _ = update_cache.communicate()
         logger.info("Completed update")
-        sys.exit()
-
-    games_data = get_games_data(DATA_PATH)
 
     # Get download directory from lgog config
+    games_data = games_details["games"]
     download_directory = DownloadDir(parse_config(CONFIG_PATH, 'directory'))
     logger.info(f'Download directory is: {download_directory.path}')
 
@@ -157,31 +201,8 @@ if __name__ == '__main__':
     DATA_PATH = os.path.join(HOME, ".cache/lgogdownloader/gamedetails.json")
     CONFIG_PATH = os.path.join(HOME, '.config/lgogdownloader/config.cfg')
 
-    # Get args from command line
     args = parse_command_line()
-
-    # Parameters for .log file
-    file_name = None
-    file_mode = None
-
-    if args.log:
-        file_name = "lgog.log"
-        file_mode = "w"
-
-    logging.basicConfig(
-        filename=file_name,
-        filemode=file_mode,
-        format="%(levelname)s:%(name)s:[%(funcName)s]: %(message)s",
-        level=logging.DEBUG
-        )
-    # Discard all DEBUG messages to effectively set the level to INFO
-    logging.disable(logging.DEBUG)
-
-    if args.verbose:
-        # Remove restriction on logging, returning to the 'original' level DEBUG
-        logging.disable(logging.NOTSET)
-
-    logger = logging.getLogger(__name__)
+    logger = setup_logging(args)
 
     try:
         sys.exit(main(args))
