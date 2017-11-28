@@ -49,7 +49,7 @@ class Game:
         return self._extract_from_game_info("dlcs")
 
     def check_for_update(self):
-        """Compare local files to those on the server."""
+        """Compare local file versions to those on the server."""
         logger.info(f"Checking {self.name} for updates...")
 
         server_path = self.installers[self.platform]

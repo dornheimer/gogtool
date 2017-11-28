@@ -48,5 +48,6 @@ class DownloadDir:
             file_path = os.path.join(self.path, game.name, fn)
             logger.debug(f"file_path for {game} is: {file_path}")
             print(file_path)
-            #os.remove(file_path)
+
+            os.remove(file_path)
             logger.info(f"Removed {file_path}")

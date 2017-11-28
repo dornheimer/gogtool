@@ -1,6 +1,5 @@
-from datetime import datetime
-
 import argparse
+from datetime import datetime
 import logging
 import json
 import os
@@ -23,13 +22,13 @@ def check_input(prompt, choices={'y', 'n'}):
 
 
 def check_local_files(games_data, download_directory):
+    """Check files of every game and add to list if an update is available."""
     local_games = []
     for game in download_directory.games:
         local_games.append(Game(game,
                                 get_game_info(game, games_data),
                                 download_directory.files[game]["local_path"]))
 
-    # check every game and add to list if an update is available
     games_with_update = [lg for lg in local_games if lg.check_for_update()]
     print("\nGames with outdated setup files:")
     print("\n".join([g.name for g in games_with_update]), end="\n\n")
@@ -182,15 +181,16 @@ def main(args):
                 game.update = False
 
     # Download files for every selected game
-    for game in games_with_update:
+    download_games = [g for g in games_with_update if g.update]
+    for game in download_games:
         game.download()
 
     if args.delete:
         delete_conf = check_input("\nDelete old setup files? (y/n) ")
         if delete_conf == 'y':
             print("Deleting files...")
-            for game in games_with_update:
-                download_directory.delete_files(game)
+            for game in download_games:
+                    download_directory.delete_files(game)
 
     print('Done.')
 
