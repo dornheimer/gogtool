@@ -42,12 +42,13 @@ class DownloadDir:
 
     def delete_files(self, game):
         """Delete all files of specified game."""
-        logging.info(f"Deleting files for {game}")
+        logger.info(f"Deleting files for {game}")
+        logger.debug(f"Local files for {game}: {game.local_path}")
 
-        for fn in self.files[game.name]:
+        for fn in self.files[game.name]["local_path"]:
             file_path = os.path.join(self.path, game.name, fn)
             logger.debug(f"file_path for {game} is: {file_path}")
             print(file_path)
 
-            os.remove(file_path)
+            #os.remove(file_path)
             logger.info(f"Removed {file_path}")

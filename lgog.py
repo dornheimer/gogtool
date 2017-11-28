@@ -91,9 +91,10 @@ def parse_command_line():
                         help="delete outdated setup files after update")
     parser.add_argument("--list", action="store_true",
                         help="list outdated setup files")
-    parser.add_argument("--log", nargs="?", default="%(prog)s.log"
-                        help="save output to log file")
-    parser.add_argument("--verbose", action="store_true",
+    parser.add_argument("--log", nargs="?", const="lgog.log",
+                        help="save output to log file (default='lgog.log')")
+    parser.add_argument("--debug", nargs="?", default="warning", const="info",
+                        choices=["info", "debug", "warning", "critical", "error", "notset"],
                         help="print more information")
     parser.add_argument("--platform", nargs="+", choices={'1', '2', '4'}, default={'4', '1'},
                         help="set platform priority (default 1. 4=linux, 2. 1=windows)")
@@ -123,27 +124,45 @@ def parse_config(path, key=None):
 
 
 def setup_logging(args):
-    file_name = None
-    file_mode = None
 
-    if args.log:
-        file_name = "lgog.log"
-        file_mode = "w"
+    levels = {
+            "debug": logging.DEBUG,
+            "info": logging.INFO,
+            "warning": logging.WARNING,
+            "error": logging.ERROR,
+            "critical": logging.CRITICAL,
+            "notset": logging.NOTSET,
+            }
 
-    logging.basicConfig(
-        filename=file_name,
-        filemode=file_mode,
-        format="%(levelname)s:%(name)s:[%(funcName)s]: %(message)s",
-        level=logging.DEBUG
-        )
-    # Discard all DEBUG messages to effectively set the level to INFO
-    logging.disable(logging.DEBUG)
+    logging_level = levels.get(args.debug)
 
-    if args.verbose:
-        # Remove restriction on logging, returning to the 'original' level DEBUG
-        logging.disable(logging.NOTSET)
+    if args.log is not None:
+        # Set up logging to file
+        config_kwargs = {
+            "filename": args.log,
+            "filemode": "w",
+            "format": "%(asctime)s - %(levelname)s:%(name)s:[%(funcName)s]: %(message)s",
+            "datefmt": "%H:%M:%S",
+            "level": logging_level}
+    else:
+        # Log to console only
+        config_kwargs = {
+            "format": "%(levelname)s:%(name)s:[%(funcName)s]: %(message)s",
+            "level": logging_level}
 
-    return logging.getLogger(__name__)
+    logging.basicConfig(**config_kwargs)
+
+    if args.log is not None:
+        # Log to both console and file
+        console = logging.StreamHandler()
+        console.setLevel(logging_level)
+        formatter = logging.Formatter("%(levelname)s:%(name)s:[%(funcName)s]: %(message)s")
+        console.setFormatter(formatter)
+        logging.getLogger("").addHandler(console)
+
+    logger = logging.getLogger(__name__)
+    logger.debug(f"logger '{logger.name}' created")
+    return logger
 
 
 def main(args):
