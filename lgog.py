@@ -82,7 +82,7 @@ def get_game_info(game, games_data):
 
 
 def parse_command_line():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog="lgog")
     parser.add_argument("--all", action="store_true",
                         help="download newer versions for all games found in default directory")
     parser.add_argument("--update", action="store_true",
@@ -91,7 +91,7 @@ def parse_command_line():
                         help="delete outdated setup files after update")
     parser.add_argument("--list", action="store_true",
                         help="list outdated setup files")
-    parser.add_argument("--log", action="store_true",
+    parser.add_argument("--log", nargs="?", default="%(prog)s.log"
                         help="save output to log file")
     parser.add_argument("--verbose", action="store_true",
                         help="print more information")
@@ -183,7 +183,7 @@ def main(args):
     # Download files for every selected game
     download_games = [g for g in games_with_update if g.update]
     for game in download_games:
-        game.download()
+        game.update_game()
 
     if args.delete:
         delete_conf = check_input("\nDelete old setup files? (y/n) ")

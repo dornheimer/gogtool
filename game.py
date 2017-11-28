@@ -65,22 +65,33 @@ class Game:
 
         return self.update
 
-    def download(self):
+    def download(self, file_id=None):
+        """Download setup files for game (optionally by file ID)."""
+        lgog_args = ["lgogdownloader"]
+
+        if file_id is not None:
+            # Format: 'gamename/file_id'
+            lgog_args.extend(["download-file", f"{self.name}/{file_id}"])
+        else:
+            if self.platform == 1:
+                logger.debug(f"Platform for {self.name} is 'w'")
+                lgog_args.extend(["--platform", "w", "--download", "--game", self.name])
+            if self.platform == 4:
+                logger.debug(f"Platform for {self.name} is 'l'")
+                lgog_args.extend(["--download", "--game", self.name])
+
+        logger.info(f'Downloading file(s) for {self.name}...')
+        download_files = subprocess.Popen(lgog_args, stdout=subprocess.PIPE)
+        stdout, _ = download_files.communicate()
+        out = stdout.decode('utf-8')
+        logger.info("Download complete")
+
+    def update_game(self):
         """Download newer versions of the game's setup files."""
         logger.debug(f"{self.name}.update == {self.update}")
         if self.update:
-            if self.platform == 1:
-                logger.debug(f"Platform for {self.name} is 'w'")
-                update_args = ["lgogdownloader", "--platform", "w", "--download", "--game", self.name]
-            if self.platform == 4:
-                logger.debug(f"Platform for {self.name} is 'l'")
-                update_args = ["lgogdownloader", "--download", "--game", self.name]
+            self.download()
 
-            logger.info(f'Downloading file(s) for {self.name}...')
-            update_files = subprocess.Popen(update_args, stdout=subprocess.PIPE)
-            stdout, _ = update_files.communicate()
-            out = stdout.decode('utf-8')
-            logger.info("Download complete")
 
     def __str__(self):
         return self.name
