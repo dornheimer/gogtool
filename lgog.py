@@ -14,7 +14,7 @@ def check_input(prompt, choices={'y', 'n'}):
     """Verify user input."""
     while True:
         choice = input(prompt)
-        if choice in choices:
+        if choice.lower() in choices:
             break
         print(f'Invalid option: {choice}')
 
@@ -30,6 +30,12 @@ def check_local_files(games_data, download_directory):
         local_path = download_directory.files[game]["local_path"]
         local_files = download_directory.files[game]["setup_files"]
         local_games.append(Game(game, game_info, local_path, local_files))
+
+        logger.debug(f"Local files for {game}: {len(local_files)}")
+        if local_files == []:  # Empty folder
+            prompt = (f"Folder for {game} is empty. Download latest installer? (y/n)" end=" ")
+            if check_input(prompt) == "y":
+                game.update = True
 
     games_with_update = [lg for lg in local_games if lg.check_for_update()]
     print("\nGames with outdated setup files:")
