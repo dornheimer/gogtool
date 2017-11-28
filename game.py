@@ -7,22 +7,16 @@ logger = logging.getLogger(__name__)
 
 
 class Game:
-    def __init__(self, name, game_info, local_path):
+    def __init__(self, name, game_info, local_path, local_files):
         self.name = name
         self.game_info = game_info
         self.local_path = local_path
+        self.local_files = local_files
+
         self.installers = self._get_installers()
         self.dlc = self._get_dlc()
         self.update = False
         self.old_files = set()
-
-    @property
-    def local_files(self):
-        file_names = os.listdir(self.local_path)
-        game_name = self.name.split("_")[0]
-        prefixes = ('gog', 'setup', self.name, game_name)
-
-        return [fn for fn in file_names if fn.startswith(prefixes)]
 
     @property
     def platform(self):
@@ -91,7 +85,6 @@ class Game:
         logger.debug(f"{self.name}.update == {self.update}")
         if self.update:
             self.download()
-
 
     def __str__(self):
         return self.name

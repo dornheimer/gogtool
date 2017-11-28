@@ -31,8 +31,10 @@ class DownloadDir:
         for game_name in self._scan_for_games():
             game_path = os.path.join(self.path, game_name)
             game_files = os.listdir(game_path)
-            setup_files, other_files = [], []
-            setup_files = [gf for gf in game_files if gf.startswith(('gog', 'setup', game_name))]
+
+            alt_name = game_name.split("_")[0]
+            prefixes = ('gog', 'setup', game_name, alt_name)
+            setup_files = [gf for gf in game_files if gf.startswith(prefixes)]
 
             files[game_name] = {
                                 "setup_files": setup_files,
@@ -45,7 +47,7 @@ class DownloadDir:
         logger.info(f"Deleting files for {game}")
         logger.debug(f"Local files for {game}: {game.local_path}")
 
-        for fn in self.files[game.name]["local_path"]:
+        for fn in self.files[game.name]["setup_files"]:
             file_path = os.path.join(self.path, game.name, fn)
             logger.debug(f"file_path for {game} is: {file_path}")
             print(file_path)

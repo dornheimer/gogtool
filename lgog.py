@@ -25,9 +25,11 @@ def check_local_files(games_data, download_directory):
     """Check files of every game and add to list if an update is available."""
     local_games = []
     for game in download_directory.games:
-        local_games.append(Game(game,
-                                get_game_info(game, games_data),
-                                download_directory.files[game]["local_path"]))
+
+        game_info = get_game_info(game, games_data)
+        local_path = download_directory.files[game]["local_path"]
+        local_files = download_directory.files[game]["setup_files"]
+        local_games.append(Game(game, game_info, local_path, local_files))
 
     games_with_update = [lg for lg in local_games if lg.check_for_update()]
     print("\nGames with outdated setup files:")
