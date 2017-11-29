@@ -50,7 +50,10 @@ class DownloadDir:
         for fn in self.files[game.name]["setup_files"]:
             file_path = os.path.join(self.path, game.name, fn)
             logger.debug(f"file_path for {game} is: {file_path}")
-            print(file_path)
 
-            #os.remove(file_path)
-            logger.info(f"Removed {file_path}")
+            try:
+                print(file_path)
+                os.remove(file_path)
+                logger.info(f"Removed {file_path}")
+            except FileNotFoundError:
+                logger.error("File path does not exist", exc_info=True)

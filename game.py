@@ -16,6 +16,7 @@ class Game:
         self.installers = self._get_installers()
         self.dlc = self._get_dlc()
         self.update = False
+        self.conf = False
         self.old_files = set()
 
     @property
@@ -30,6 +31,7 @@ class Game:
                     values.setdefault(v['platform'], []).append(v['path'])
             logger.debug(f"{key} found for {self.name}")
             return values
+
         except KeyError:
             logger.debug(f"No {key} for {self.name} found")
             return None
@@ -74,11 +76,12 @@ class Game:
                 logger.debug(f"Platform for {self.name} is 'l'")
                 lgog_args.extend(["--download", "--game", self.name])
 
-        logger.info(f'Downloading file(s) for {self.name}...')
+        print(f'Downloading file(s) for {self.name}...')
+        logger.debug(f"Executing: {', '.join(lgog_args)}")
         download_files = subprocess.Popen(lgog_args, stdout=subprocess.PIPE)
         stdout, _ = download_files.communicate()
         out = stdout.decode('utf-8')
-        logger.info("Download complete")
+        print("Download complete")
 
     def update_game(self):
         """Download newer versions of the game's setup files."""

@@ -29,13 +29,15 @@ def check_local_files(games_data, download_directory):
         game_info = get_game_info(game, games_data)
         local_path = download_directory.files[game]["local_path"]
         local_files = download_directory.files[game]["setup_files"]
-        local_games.append(Game(game, game_info, local_path, local_files))
+        game_object = Game(game, game_info, local_path, local_files)
+        local_games.append(game_object)
 
         logger.debug(f"Local files for {game}: {len(local_files)}")
         if local_files == []:  # Empty folder
-            prompt = (f"Folder for {game} is empty. Download latest installer? (y/n)" end=" ")
+            prompt = (f"Folder for {game} is empty. Download latest installer? (y/n) ")
             if check_input(prompt) == "y":
-                game.update = True
+                game_object.update = True
+                game_object.conf = True
 
     games_with_update = [lg for lg in local_games if lg.check_for_update()]
     print("\nGames with outdated setup files:")
@@ -59,6 +61,7 @@ def get_games_details(data_path):
 
 
 def is_outdated(games_details):
+    """Check if creation timestamp of game details is older than two days."""
     logger.info("Checking games data creation date...")
 
     gd_creation_date = datetime.strptime(games_details["date"], "%Y%m%dT%H%M%S")
@@ -188,8 +191,18 @@ def main(args):
 
     # Get download directory from lgog config
     games_data = games_details["games"]
-    download_directory = DownloadDir(parse_config(CONFIG_PATH, 'directory'))
-    logger.info(f'Download directory is: {download_directory.path}')
+
+    if args.directory:
+        directory = os.path.abspath(args.directory)
+    else:  # Get directory from lgog config by default
+        directory = parse_config(CONFIG_PATH, 'directory')
+
+    if os.path.exists(directory):
+        download_directory = DownloadDir(directory)
+        logger.info(f'Download directory is: {download_directory.path}')
+    else:
+        print("Download directory '{download_directory}' does not exist.")
+        sys.exit()
 
     games_with_update = check_local_files(games_data, download_directory)
 
@@ -203,9 +216,13 @@ def main(args):
     if not args.all:
         # Ask for download confirmation by default
         for game in games_with_update:
+            if game.conf:
+                continue
+
             choice = check_input(f'Re-download file(s) for {game.name}? (y/n) ')
             if choice == "n":
                 game.update = False
+                game.conf = True
 
     # Download files for every selected game
     download_games = [g for g in games_with_update if g.update]
