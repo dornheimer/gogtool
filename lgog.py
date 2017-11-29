@@ -2,9 +2,10 @@ import os
 import subprocess
 import sys
 
-from download_directory import DownloadDir
-from game_data import GameData
-from helper_functions import *
+from lgog.download_directory import DownloadDir
+from lgog.game_data import GameData
+from lgog.helper import check_input, check_local_files
+from lgog.helper import parse_command_line, parse_config, setup_logging
 
 
 def main(args):

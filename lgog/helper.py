@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from game import Game
+from lgog.game import Game
 
 
 logger = logging.getLogger("__main__")
