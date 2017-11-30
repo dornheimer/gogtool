@@ -32,8 +32,9 @@ def main(args):
         download_directory = DownloadDir(directory)
         logger.info(f"Download directory is: {download_directory.path}")
     else:
-        print("Download directory '{download_directory}' does not exist.")
-        sys.exit()
+        print("Invalid download directory.")
+        logger.error("Download directory '{download_directory}' does not exist.")
+        sys.exit(2)
 
     games_with_update = check_files(game_data, download_directory)
 

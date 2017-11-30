@@ -31,3 +31,7 @@ def run_command(args):
     logger.debug(f"Executing '{args_str}'...")
     lgog = subprocess.Popen(args, stdout=subprocess.PIPE)
     stdout = lgog.communicate()[0]
+
+    rc = lgog.returncode
+    if rc != 0:
+        logger.error(f"lgogdownloader exited with error (return code: {rc})")
