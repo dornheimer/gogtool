@@ -1,6 +1,6 @@
 import os
-import subprocess
 
+import lgog.helper.lgogdownloader as lgogdownloader
 from lgog.helper.log import logger
 
 
@@ -61,25 +61,10 @@ class Game:
 
     def download(self, file_id=None):
         """Download setup files for game (optionally by file ID)."""
-        lgog_args = ["lgogdownloader"]
-
         if file_id is not None:
-            # Format: 'gamename/file_id'
-            lgog_args.extend(["download-file", f"{self.name}/{file_id}"])
+            lgogdownloader(self.name, file_id)
         else:
-            if self.platform == 1:
-                logger.debug(f"Platform for {self.name} is 'w'")
-                lgog_args.extend(["--platform", "w", "--download", "--game", self.name])
-            if self.platform == 4:
-                logger.debug(f"Platform for {self.name} is 'l'")
-                lgog_args.extend(["--download", "--game", self.name])
-
-        print(f'Downloading file(s) for {self.name}...')
-        logger.debug(f"Executing: {', '.join(lgog_args)}")
-        download_files = subprocess.Popen(lgog_args, stdout=subprocess.PIPE)
-        stdout, _ = download_files.communicate()
-        out = stdout.decode('utf-8')
-        print("Download complete")
+            lgogdownloader.download(self.name)
 
     def update_game(self):
         """Download newer versions of the game's setup files."""
