@@ -1,28 +1,13 @@
 import os
-import sys
 
+from lgog.helper.directory import Directory
 from lgog.helper.log import logger
 
 
-class DownloadDir:
+class DownloadDir(Directory):
     def __init__(self, path):
-        self.path = path
+        super().__init__(path)
         self.files = self._scan_for_setup_files()
-
-    @property
-    def path(self):
-        return self._path
-
-    @path.setter
-    def path(self, path):
-        if not os.path.exists(path):
-            try:
-                raise FileNotFoundError("Path to directory does not exist.")
-            except:
-                logger.error(f"Directory '{path}' does not exist.")
-                sys.exit(2)
-        self._path = path
-        logger.debug(f"{type(self).__name__} initialized with {self.path}")
 
     @property
     def games(self):
