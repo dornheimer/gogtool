@@ -9,7 +9,7 @@ from lgog.helper.config import parse_config
 from lgog.helper.command_line import parse_command_line
 from lgog.helper.local import check_files
 from lgog.helper.user import check_input
-from lgog.helper.log import logger
+from lgog.helper.log import levels, logger
 
 
 def main(args):
@@ -81,6 +81,10 @@ if __name__ == '__main__':
     CONFIG_PATH = os.path.join(HOME, '.config/lgogdownloader/config.cfg')
 
     args = parse_command_line()
+
+    if args.debug:
+        logging_level = levels.get(args.debug)
+        logger.setLevel(logging_level)
 
     try:
         sys.exit(main(args))
