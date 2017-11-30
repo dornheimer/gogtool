@@ -13,12 +13,13 @@ def parse_command_line():
                         help="list outdated setup files")
     parser.add_argument("--log", nargs="?", const="lgog.log",
                         help="save output to log file (default='lgog.log')")
-    parser.add_argument("--debug", nargs="?", default="warning", const="info",
+    parser.add_argument("--debug", nargs="?", const="debug", metavar="logging.LEVEL",
                         choices=["info", "debug", "warning", "critical", "error", "notset"],
-                        help="print more information")
+                        help="""set logger level for console (default=INFO).
+                        if argument is omitted, level is set to 'debug'""")
     parser.add_argument("--platform", nargs="+", choices={'1', '2', '4'}, default={'4', '1'},
                         help="set platform priority (default 1. 4=linux, 2. 1=windows)")
-    parser.add_argument("--directory", nargs="+",
+    parser.add_argument("--directory", metavar="path",
                         help="override default directory")
     parser.add_argument("--clean", action="store_true",
                         help="delete orphaned setup files")

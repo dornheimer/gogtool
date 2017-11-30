@@ -9,7 +9,7 @@ from lgog.helper.config import parse_config
 from lgog.helper.command_line import parse_command_line
 from lgog.helper.local import check_files
 from lgog.helper.user import check_input
-from lgog.helper.log import levels, logger
+from lgog.helper.log import console, levels, logger
 
 
 def main(args):
@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
     if args.debug:
         logging_level = levels.get(args.debug)
-        logger.setLevel(logging_level)
+        console.setLevel(logging_level)
 
     try:
         sys.exit(main(args))
