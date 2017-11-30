@@ -72,7 +72,7 @@ def main(args):
 
 if __name__ == "__main__":
 
-    HOME = os.environ['HOME']
+    HOME = os.getenv("HOME")
     DATA_PATH = os.path.join(HOME, ".cache/lgogdownloader/gamedetails.json")
     CONFIG_PATH = os.path.join(HOME, ".config/lgogdownloader/config.cfg")
 
