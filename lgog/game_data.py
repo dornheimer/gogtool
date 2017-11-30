@@ -3,7 +3,7 @@ import logging
 import json
 import sys
 
-logger = logging.getLogger(__name__)
+from lgog.helper.log import logger
 
 
 class GameData:
@@ -12,7 +12,7 @@ class GameData:
         self.games_data = self._get_games_data()
         self.games_list = self.games_data["games"]
 
-        logger.debug(f"GameData initialized with {self.path}")
+        logger.debug(f"{type(self).__name__} initialized with {self.path}")
 
     def _get_games_data(self):
         """Get games data from lgogdownloader json file."""

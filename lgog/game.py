@@ -1,8 +1,7 @@
-import logging
 import os
 import subprocess
 
-logger = logging.getLogger(__name__)
+from lgog.helper.log import logger
 
 
 class Game:

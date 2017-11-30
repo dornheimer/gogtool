@@ -5,8 +5,11 @@ import sys
 
 from lgog.download_directory import DownloadDir
 from lgog.game_data import GameData
-from lgog.helper import check_input, check_local_files
-from lgog.helper import parse_command_line, parse_config, setup_logging
+from lgog.helper.config import parse_config
+from lgog.helper.command_line import parse_command_line
+from lgog.helper.local import check_files
+from lgog.helper.user import check_input
+from lgog.helper.log import logger
 
 
 def main(args):
@@ -36,7 +39,7 @@ def main(args):
         print("Download directory '{download_directory}' does not exist.")
         sys.exit()
 
-    games_with_update = check_local_files(game_data, download_directory)
+    games_with_update = check_files(game_data, download_directory)
 
     if args.clean:
         print("Cleaning outdated setup files...")
@@ -78,7 +81,6 @@ if __name__ == '__main__':
     CONFIG_PATH = os.path.join(HOME, '.config/lgogdownloader/config.cfg')
 
     args = parse_command_line()
-    logger = setup_logging(args)
 
     try:
         sys.exit(main(args))
