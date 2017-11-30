@@ -1,6 +1,4 @@
-#!/usr/bin/python3
-import os
-import sys
+#!/usr/bin/env python
 from setuptools import setup
 
 setup(
@@ -10,7 +8,6 @@ setup(
     author='iiu',
     author_email='iiu@posteo.net',
     packages=['lgog'],
-    scripts=['bin/lgog'],
-    data_files=data_files,
-    description='Small (and incomplete) extension for lgogdownloader',
+    scripts=['lgog'],
+    description='Small (and quite useless) extension for lgogdownloader',
 )

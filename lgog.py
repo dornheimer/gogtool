@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import subprocess
 import sys
@@ -15,15 +16,17 @@ def main(args):
 
     # Automatically run update if game_data is outdated
     if args.update or game_data.is_outdated:
-        # Update game details cache
         logger.info("Running 'lgogdownloader --update-cache'...")
-        update_cache = subprocess.Popen(["lgogdownloader", "--update-cache"], stdout=subprocess.PIPE)
-        stdout, _ = update_cache.communicate()
+        update_cache = subprocess.Popen(
+                            ["lgogdownloader", "--update-cache"],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = update_cache.communicate()
         logger.info("Completed update")
 
     if args.directory:
         directory = os.path.abspath(args.directory)
-    else:  # Get directory from lgog config by default
+    else:
+        # Get directory from lgog config by default
         directory = parse_config(CONFIG_PATH, 'directory')
 
     if os.path.exists(directory):
