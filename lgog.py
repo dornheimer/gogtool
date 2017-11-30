@@ -28,14 +28,7 @@ def main(args):
         # Get directory from lgog config by default
         directory = parse_config(CONFIG_PATH, "directory")
 
-    if os.path.exists(directory):
-        download_directory = DownloadDir(directory)
-        logger.info(f"Download directory is: {download_directory.path}")
-    else:
-        print("Invalid download directory.")
-        logger.error("Download directory '{download_directory}' does not exist.")
-        sys.exit(2)
-
+    download_directory = DownloadDir(directory)
     games_with_update = check_files(game_data, download_directory)
 
     if args.clean:
