@@ -34,6 +34,7 @@ def main(args):
         directory = parse_config(CONFIG_PATH, "directory")
 
     download_directory = DownloadDir(directory)
+    download_directory.scan_for_setup_files(library_data.games)
     games_with_update = check_files(library_data, download_directory)
 
     if args.clean:

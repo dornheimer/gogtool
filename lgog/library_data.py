@@ -19,7 +19,16 @@ class LibraryData(Directory):
         with open(self.path) as data:
             library_data = json.load(data)
 
+        print(library_data)
         return library_data
+
+    @property
+    def games(self):
+        return [g["gamename"] for g in self.games_list]
+
+    @property
+    def size(self):
+        return len(self.games_list)
 
     @property
     def is_outdated(self):
@@ -47,10 +56,10 @@ class LibraryData(Directory):
         :param game_name: game name as stored in DownloadDir.
         :return: dicitionary with information associated with game_name.
         """
-        for title in self.games_list:
-            if title['gamename'] == game_name:
+        for entry in self.games_list:
+            if entry['gamename'] == game_name:
                 logger.debug(f"Game info for {game_name} found")
-                return title
+                return entry
 
         logger.warning(f"Game info for {game_name} not found")
         return None

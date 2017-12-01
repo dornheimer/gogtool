@@ -9,8 +9,8 @@ def check_files(library_data, download_directory):
     for game in download_directory.games:
 
         game_info = library_data.get_game_info(game)
-        local_path = download_directory.files[game]["local_path"]
-        local_files = download_directory.files[game]["setup_files"]
+        local_path = download_directory.get_path(game)
+        local_files = download_directory.get_files(game)
         game_object = Game(game, game_info, local_path, local_files)
         local_games.append(game_object)
 
