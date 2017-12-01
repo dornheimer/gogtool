@@ -1,3 +1,5 @@
+"""Module for parsing config files."""
+
 from lgog.helper.log import logger
 
 

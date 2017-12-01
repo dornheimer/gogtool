@@ -1,5 +1,5 @@
 from lgog.game import Game
-from lgog.helper.user import check_input
+from lgog.helper import user
 from lgog.helper.log import logger
 
 
@@ -17,7 +17,7 @@ def check_files(game_data, download_directory):
         logger.debug(f"Local files for {game}: {len(local_files)}")
         if local_files == []:  # Empty folder
             prompt = (f"Folder for {game} is empty. Download latest installer? (y/n) ")
-            if check_input(prompt) == "y":
+            if user.confirm(prompt):
                 game_object.update = True
                 game_object.conf = True
 

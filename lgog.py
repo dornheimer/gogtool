@@ -4,16 +4,21 @@ import sys
 
 import lgog.helper.lgogdownloader as lgogdownloader
 import lgog.helper.log as log
+from lgog.helper import user
 from lgog.download_directory import DownloadDir
 from lgog.game_data import GameData
 from lgog.helper.config import parse_config
 from lgog.helper.command_line import parse_command_line
 from lgog.helper.local import check_files
-from lgog.helper.user import check_input
 from lgog.helper.log import logger
 
 
 def main(args):
+    """
+    Run main program.
+
+    :param args: Parsed command line arguments.
+    """
     logger.debug(f"Running with args: {args}")
 
     game_data = GameData(DATA_PATH)
@@ -44,8 +49,9 @@ def main(args):
             if game.conf:
                 continue
 
-            choice = check_input(f"Re-download file(s) for {game.name}?")
-            if choice == "n":
+            # Unselect game if user reponse is "no"
+            prompt = f"Re-download file(s) for {game.name}?"
+            if not user.confirm(prompt):
                 game.update = False
                 game.conf = True
 
@@ -55,8 +61,8 @@ def main(args):
         game.update_game()
 
     if args.delete:
-        delete_conf = check_input("\nDelete old setup files?")
-        if delete_conf == 'y':
+        prompt = "\nDelete old setup files?"
+        if user.confirm(prompt):
             print("Deleting files...")
             for game in download_games:
                     download_directory.delete_files(game)

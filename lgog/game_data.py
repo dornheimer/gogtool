@@ -6,13 +6,16 @@ from lgog.helper.log import logger
 
 
 class GameData(Directory):
+    """
+    User-specific GOG library data.
+    """
     def __init__(self, path):
         super().__init__(path)
         self.games_data = self._get_games_data()
         self.games_list = self.games_data["games"]
 
     def _get_games_data(self):
-        """Get games data from lgogdownloader json file."""
+        """Convert gamedetails.json file into a python dictionary."""
         with open(self.path) as data:
             games_data = json.load(data)
 
@@ -38,11 +41,16 @@ class GameData(Directory):
 
         return outdated
 
-    def get_game_info(self, game):
+    def get_game_info(self, game_name):
+        """Get info associated with game from the library data.
+
+        :param game_name: game name as stored in DownloadDir.
+        :return: dicitionary with information associated with game_name.
+        """
         for title in self.games_list:
-            if title['gamename'] == game:
-                logger.debug(f"Game info for {game} found")
+            if title['gamename'] == game_name:
+                logger.debug(f"Game info for {game_name} found")
                 return title
 
-        logger.warning(f"Game info for {game} not found")
+        logger.warning(f"Game info for {game_name} not found")
         return None

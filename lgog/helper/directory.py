@@ -5,6 +5,9 @@ from lgog.helper.log import logger
 
 
 class Directory:
+    """
+    Base class that verifies if an object is instantiated with a valid path.
+    """
     def __init__(self, path):
         self.path = path
 

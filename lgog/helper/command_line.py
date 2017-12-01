@@ -1,3 +1,5 @@
+"""CLI for main application."""
+
 import argparse
 
 
