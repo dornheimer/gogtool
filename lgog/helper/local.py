@@ -3,12 +3,12 @@ from lgog.helper import user
 from lgog.helper.log import logger
 
 
-def check_files(game_data, download_directory):
+def check_files(library_data, download_directory):
     """Check files of every game and add to list if an update is available."""
     local_games = []
     for game in download_directory.games:
 
-        game_info = game_data.get_game_info(game)
+        game_info = library_data.get_game_info(game)
         local_path = download_directory.files[game]["local_path"]
         local_files = download_directory.files[game]["setup_files"]
         game_object = Game(game, game_info, local_path, local_files)

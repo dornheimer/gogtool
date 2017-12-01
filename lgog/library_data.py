@@ -5,7 +5,7 @@ from lgog.helper.directory import Directory
 from lgog.helper.log import logger
 
 
-class GameData(Directory):
+class LibraryData(Directory):
     """
     User-specific GOG library data.
     """

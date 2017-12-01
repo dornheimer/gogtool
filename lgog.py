@@ -6,7 +6,7 @@ import lgog.helper.lgogdownloader as lgogdownloader
 import lgog.helper.log as log
 from lgog.helper import user
 from lgog.download_directory import DownloadDir
-from lgog.game_data import GameData
+from lgog.library_data import LibraryData
 from lgog.helper.config import parse_config
 from lgog.helper.command_line import parse_command_line
 from lgog.helper.local import check_files
@@ -21,10 +21,10 @@ def main(args):
     """
     logger.debug(f"Running with args: {args}")
 
-    game_data = GameData(DATA_PATH)
+    library_data = LibraryData(DATA_PATH)
 
-    # Automatically run update if game_data is outdated
-    if args.update or game_data.is_outdated:
+    # Automatically run update if library_data is outdated
+    if args.update or library_data.is_outdated:
         lgogdownloader.update_cache()
 
     if args.directory:
@@ -34,7 +34,7 @@ def main(args):
         directory = parse_config(CONFIG_PATH, "directory")
 
     download_directory = DownloadDir(directory)
-    games_with_update = check_files(game_data, download_directory)
+    games_with_update = check_files(library_data, download_directory)
 
     if args.clean:
         print("Cleaning outdated setup files...")
