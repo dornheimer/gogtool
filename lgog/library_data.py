@@ -11,22 +11,22 @@ class LibraryData(Directory):
     """
     def __init__(self, path):
         super().__init__(path)
-        self.games_data = self._get_games_data()
-        self.games_list = self.games_data["games"]
+        self.library_data = self._get_library_data()
+        self.games_list = self.library_data["games"]
 
-    def _get_games_data(self):
+    def _get_library_data(self):
         """Convert gamedetails.json file into a python dictionary."""
         with open(self.path) as data:
-            games_data = json.load(data)
+            library_data = json.load(data)
 
-        return games_data
+        return library_data
 
     @property
     def is_outdated(self):
         """Check if game details file is older than two days."""
         logger.info("Checking games data creation date...")
 
-        gd_creation_date = datetime.strptime(self.games_data["date"], "%Y%m%dT%H%M%S")
+        gd_creation_date = datetime.strptime(self.library_data["date"], "%Y%m%dT%H%M%S")
         gd_days_since_last_update = (datetime.now() - gd_creation_date).days
         outdated = gd_days_since_last_update >= 2
 
