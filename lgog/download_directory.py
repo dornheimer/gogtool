@@ -39,6 +39,7 @@ class DownloadDir(Directory):
             alt_name = game_name.split("_")[0]
             prefixes = ('gog', 'setup', game_name, alt_name)
             setup_files = [gf for gf in game_files if gf.startswith(prefixes)]
+            logger.debug(f"{len(setup_files)} file(s) for {game_name} found")
             files[game_name] = setup_files
 
         self.files = files
@@ -61,21 +62,21 @@ class DownloadDir(Directory):
                 logger.error("File path does not exist", exc_info=True)
 
     def get_files(self, game_name):
-        try:
-            local_files = self.files[game_name]
-            logger.debug(f"Local files for {game_name}: {local_files}")
-        except KeyError:
-            logger.warning(f"No entry for '{game_name}' in download directory",
-                           exc_info=True)
-            print("{game_name} not found in download directory. Skipping...")
-
-        return local_files
+        if game_name in self.games:
+            try:
+                local_files = self.files[game_name]
+                logger.debug(f"Local files for {game_name}: {local_files}")
+            except KeyError:
+                logger.warning(f"No entry for '{game_name}' in download directory",
+                               exc_info=True)
+                print(f"{game_name} not found in download directory. Skipping...")
+                return None
+            else:
+                return local_files
 
     def get_path(self, game_name):
         if game_name in self.games:
             return os.path.join(self.path, game_name)
         else:
-            try:
-                raise FileNotFoundError
-            except:
-                logger.warning(f"Could not find '{game_name}' in download directory")
+            logger.debug(f"Could not find '{game_name}' in download directory")
+            return None

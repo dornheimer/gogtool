@@ -19,7 +19,6 @@ class LibraryData(Directory):
         with open(self.path) as data:
             library_data = json.load(data)
 
-        print(library_data)
         return library_data
 
     @property

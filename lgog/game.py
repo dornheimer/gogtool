@@ -13,10 +13,14 @@ class Game:
         self.game_info = game_info
         self.local_path = local_path
         self.local_files = local_files
-
         self.installers = self._get_installers()
         self.dlc = self._get_dlc()
-        self.update = False
+
+        self.installed = False
+        self.needs_update = False
+        self.download = False
+        self.downloaded = False
+
         self.conf = False
         self.old_files = set()
 
@@ -69,13 +73,12 @@ class Game:
         server_files = [os.path.basename(sp) for sp in server_path]
         logger.debug(f"Local files for {self.name}: {', '.join(self.local_files)}")
         if not all([(sf in self.local_files) for sf in server_files]):
-            self.update = True
+            self.needs_update = True
+
             old = [lf for lf in self.local_files if lf not in server_files]
             self.old_files.update(old)
 
-        return self.update
-
-    def download(self, file_id=None):
+    def download_files(self, file_id=None):
         """Download setup files for game.
 
         :param file_id: optionally download file by ID instead.
@@ -85,11 +88,13 @@ class Game:
         else:
             lgogdownloader.download(self.name, self.platform)
 
+        self.downloaded = True
+
     def update_game(self):
         """Download newer versions of the game's setup files."""
         logger.debug(f"{self.name}.update == {self.update}")
         if self.update:
-            self.download()
+            self.download_files()
 
     def __str__(self):
         return self.name

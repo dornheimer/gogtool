@@ -2,7 +2,7 @@ from lgog.helper.directory import Directory
 from lgog.helper.log import logger
 
 
-class InstallationDir(Directory):
+class InstallDir(Directory):
     """
     Store information about installed GOG games.
     """
