@@ -45,6 +45,10 @@ class LocalLibrary:
                 else:
                     game_object.downloaded = True
 
+            installed = game in self.install_dir.installed_games
+            if installed:
+                game_object.installed = True
+
             self.games.append(game_object)
         print(f"{self.library_data.size} games in GOG library")
         print(f"{len(self.downloaded_games)} downloaded")

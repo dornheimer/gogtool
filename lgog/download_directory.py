@@ -76,7 +76,11 @@ class DownloadDir(Directory):
 
     def get_path(self, game_name):
         if game_name in self.games:
-            return os.path.join(self.path, game_name)
+            game_path = os.path.join(self.path, game_name)
+            if os.path.exists(game_path):
+                logger.debug(f"Local path for'{game_name}': {game_path}")
+                return game_path
+            else:
+                logger.debug(f"Could not find '{game_name}' in download directory")
         else:
-            logger.debug(f"Could not find '{game_name}' in download directory")
             return None

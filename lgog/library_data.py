@@ -26,6 +26,10 @@ class LibraryData(Directory):
         return [g["gamename"] for g in self.games_list]
 
     @property
+    def game_titles(self):
+        return [g["title"] for g in self.games_list]
+
+    @property
     def size(self):
         return len(self.games_list)
 

@@ -37,6 +37,7 @@ def main(args):
     download_dir.scan_for_setup_files(library_data.games)
 
     install_dir = InstallDir(INSTALL_PATH)
+    install_dir.scan_for_games(library_data)
 
     local_library = LocalLibrary(library_data, download_dir, install_dir)
 
@@ -59,7 +60,7 @@ if __name__ == "__main__":
     HOME = os.getenv("HOME")
     DATA_PATH = os.path.join(HOME, ".cache/lgogdownloader/gamedetails.json")
     CONFIG_PATH = os.path.join(HOME, ".config/lgogdownloader/config.cfg")
-    INSTALL_PATH = HOME
+    INSTALL_PATH = os.path.join(HOME, "GOG Games/")
 
     args = parse_command_line()
 
