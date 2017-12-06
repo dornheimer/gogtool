@@ -41,6 +41,13 @@ def main(args):
 
     local_library = LocalLibrary(library_data, download_dir, install_dir)
 
+    if args.install:
+        install_queue = args.install
+        logger.info(f"Installing: {', '.join(install_queue)}")
+        for game_name in install_queue:
+            local_library.install_game(game_name)
+        sys.exit()
+
     if args.clean:
         print("Cleaning outdated setup files...")
         for game in local_library.games_with_update:

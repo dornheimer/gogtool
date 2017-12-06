@@ -11,7 +11,7 @@ class DownloadDir(Directory):
     def __init__(self, path):
         super().__init__(path)
         self.games = []
-        self.files = {}
+        self.setup_files = {}
 
     def _scan_for_games(self, game_library):
         """Scan local download directory and return a list of downloaded
@@ -31,18 +31,18 @@ class DownloadDir(Directory):
 
         logger.info("Scanning local directory for setup files...")
 
-        files = {}
+        setup_files = {}
         for game_name in self.games:
             game_path = os.path.join(self.path, game_name)
             game_files = os.listdir(game_path)
 
             alt_name = game_name.split("_")[0]
             prefixes = ('gog', 'setup', game_name, alt_name)
-            setup_files = [gf for gf in game_files if gf.startswith(prefixes)]
-            logger.debug(f"{len(setup_files)} file(s) for {game_name} found")
-            files[game_name] = setup_files
+            files = [gf for gf in game_files if gf.startswith(prefixes)]
+            logger.debug(f"{len(files)} file(s) for {game_name} found")
+            setup_files[game_name] = files
 
-        self.files = files
+        self.setup_files = setup_files
 
     def delete_files(self, game):
         """Delete all files of specified game.
@@ -64,7 +64,7 @@ class DownloadDir(Directory):
     def get_files(self, game_name):
         if game_name in self.games:
             try:
-                local_files = self.files[game_name]
+                local_files = self.setup_files[game_name]
                 logger.debug(f"Local files for {game_name}: {local_files}")
             except KeyError:
                 logger.warning(f"No entry for '{game_name}' in download directory",

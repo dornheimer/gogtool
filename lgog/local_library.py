@@ -1,3 +1,5 @@
+import os
+
 from lgog.game import Game
 from lgog.helper import user
 from lgog.helper.log import logger
@@ -8,26 +10,26 @@ class LocalLibrary:
         self.library_data = library_data
         self.download_dir = download_dir
         self.install_dir = install_dir
-        self.games = []
+        self.games = {}
 
         self._add_games()
         self._check_for_updates()
 
     @property
     def downloaded_games(self):
-        return [game for game in self.games if game.downloaded]
+        return [game for name, game in self.games.items() if game.downloaded]
 
     @property
     def installed_games(self):
-        return [game for game in self.games if game.installed]
+        return [game for name, game in self.games.items() if game.installed]
 
     @property
     def games_with_update(self):
-        return [game for game in self.games if game.needs_update]
+        return [game for name, game in self.games.items() if game.needs_update]
 
     @property
     def download_queue(self):
-        return [game for game in self.games if game.download]
+        return [game for name, game in self.games.items() if game.download]
 
     def _add_games(self):
         for game in self.library_data.games:
@@ -49,7 +51,7 @@ class LocalLibrary:
             if installed:
                 game_object.installed = True
 
-            self.games.append(game_object)
+            self.games[game] = game_object
         print(f"{self.library_data.size} games in GOG library")
         print(f"{len(self.downloaded_games)} downloaded")
         print(f"{len(self.installed_games)} installed")
@@ -89,3 +91,9 @@ class LocalLibrary:
             print("Deleting files...")
             for game in self.download_queue:
                     self.download_dir.delete_files(game)
+
+    def install_game(self, gog_id, platform=4):
+        logger.debug(f"Installing {gog_id}...")
+        game = self.games.get(gog_id)
+        dest = os.path.join(self.install_dir.path, game.name)
+        game.install(dest, platform)

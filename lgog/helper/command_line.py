@@ -23,6 +23,8 @@ def parse_command_line():
                         help="set platform priority (default 1. 4=linux, 2. 1=windows)")
     parser.add_argument("--directory", metavar="path",
                         help="override default directory")
+    parser.add_argument("--install", nargs="+",
+                        help="install a game or a list of games")
     parser.add_argument("--clean", action="store_true",
                         help="delete orphaned setup files")
 

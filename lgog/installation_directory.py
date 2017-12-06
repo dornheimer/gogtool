@@ -1,5 +1,4 @@
 import os
-import subprocess
 import re
 
 from lgog.helper.directory import Directory
@@ -29,7 +28,8 @@ class InstallDir(Directory):
         for game in game_library.games_list:
             game_name = game["gamename"]
             install_name = self._convert_title_format(game["title"])
-            if install_name in dir_contents:
+            install_name_alt = game_name.replace("_", "-")
+            if install_name in dir_contents or install_name_alt in dir_contents:
                 logger.debug(f"{install_name} found in installation directory.")
                 # Use "gamename" as identifier for consistency
                 self.installed_games_dict[game_name] = install_name
@@ -47,7 +47,3 @@ class InstallDir(Directory):
         logger.debug(f"Install name for {game_title} is: {install_name}")
 
         return install_name
-
-    def install(self, game):
-        # install/update (extract) downloaded installers here
-        # innoextract
