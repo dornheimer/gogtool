@@ -22,7 +22,7 @@ def move(src, dest):
     shutil.move(src, dest)
 
 
-def rm(path):
+def rmdir(path):
     """Remove file or directory."""
     try:
         shutil.rmtree(path)
@@ -30,4 +30,15 @@ def rm(path):
         logger.error(f"{path} does not exist.")
         sys.exit(2)
     else:
-        logger.debug(f"Sucessfully created {path}")
+        logger.debug(f"Sucessfully deleted {path}")
+
+
+def rm(file):
+    try:
+        if os.path.exists(file):
+            os.remove(file)
+    except FileNotFoundError:
+        logger.error("File path does not exist", exc_info=True)
+    else:
+        logger.debug(f"Removed '{file}'")
+        print(file)

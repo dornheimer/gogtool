@@ -12,23 +12,26 @@ class Game:
     """
     Data and methods related to a single game in the library.
     """
-    def __init__(self, name, game_info, local_path, local_files):
+    def __init__(self, name, game_info, download_path, download_files):
         self.name = name
         self.game_info = game_info
-        self.local_path = local_path
-        self.local_files = local_files
+
+        self.downloaded = False
+        self.download_path = download_path
+        self.download_files = download_files
+
+        self.installed = False
+        self.install_path = None
 
         self.setup_files = {}
         self.installers = {}
         self.dlc = {}
 
-        self.installed = False
         self.needs_update = False
         self.download = False
-        self.downloaded = False
 
         self.conf = False
-        self.old_files = set()
+        self.old_files = []
 
         self._get_setup_files()
         self._get_dlc()
@@ -42,27 +45,57 @@ class Game:
         """
         return 4 if 4 in self.setup_files else 1
 
-    def _extract_from_game_info(self, key, id_prefix='en'):
-        """Get item from game_info dictionary.
+    # def _extract_from_game_info(self, key, dlc=False):
+    #     """Get item from game_info dictionary.
+    #
+    #     :param key: dictionary key of the item.
+    #     :param dlc: look in dlc data for game
+    #     """
+    #     values = {}
+    #     try:
+    #         for v in self.game_info[key]:
+    #             values.setdefault(v['platform'], []).append(v['path'])
+    #
+    #         return values
+    #
+    #     except KeyError:
+    #         logger.debug(f"No {key} for {self.name} found")
+    #         return None
 
-        :param key: dictionary key of the item.
-        :param id_prefix: language identifier string (default='en').
+    def _get_installers(self, data=None, dlc=False, id_prefix='en'):
+        """
+        Get setup files from game info.
+
+        :param dlc: look in dlc data for game
+        :param id_prefix: language identifier string (default='en')
         """
         platforms = {4, 1}
-        values = {}
-        try:
-            for v in self.game_info[key]:
-                if v['platform'] in platforms and v['id'].startswith(id_prefix):
-                    values.setdefault(v['platform'], []).append(v['path'])
-            logger.debug(f"{key} found for {self.name}")
-            return values
+        installers = {}
 
+        if data is None:
+            data = self.game_info
+
+        try:
+            if dlc:
+                data = self.game_info["dlcs"]
+                for el in data:
+                    if "installers" in el:
+                        logger.debug(f"dlc: {el['gamename']} for {self.name} found")
+                        installers = self._get_installers(el)
+            else:
+                for i in data["installers"]:
+                    if i['platform'] in platforms and i['id'].startswith(id_prefix):
+                        installers.setdefault(i['platform'], []).append(i['path'])
+                        installers["game_name"] = i["gamename"]
         except KeyError:
-            logger.debug(f"No {key} for {self.name} found")
+            if not dlc:
+                logger.debug(f"No installer for {self.name} found")
             return None
+        else:
+            return installers
 
     def _get_setup_files(self):
-        self.setup_files = self._extract_from_game_info("installers")
+        self.setup_files = self._get_installers()
 
         # Some games have multiple setup files and only one executable installer
         for platform, files in self.setup_files.items():
@@ -72,7 +105,7 @@ class Game:
                     break
 
     def _get_dlc(self):
-        self.dlc = self._extract_from_game_info("dlcs")
+        self.dlc = self._get_installers(dlc=True)
 
     def check_for_update(self):
         """Compare local file versions to those on the server.
@@ -82,17 +115,15 @@ class Game:
         :return: True or False
         """
         server_path = self.setup_files[self.platform]
-        logger.debug(f"Server path for {self.name} is: {''.join(server_path)}")
-
         server_files = [os.path.basename(sp) for sp in server_path]
-        logger.debug(f"Local files for {self.name}: {', '.join(self.local_files)}")
-        if not all([(sf in self.local_files) for sf in server_files]):
+
+        same_files = all([(sf in self.download_files) for sf in server_files])
+        logger.debug(f"{self.name}: downloaded files match server_files ({same_files})")
+        if not same_files:
             self.needs_update = True
+            self.old_files = self.download_files
 
-            old = [lf for lf in self.local_files if lf not in server_files]
-            self.old_files.update(old)
-
-    def download_files(self, file_id=None):
+    def download_setup_files(self, file_id=None):
         """Download setup files for game.
 
         :param file_id: optionally download file by ID instead.
@@ -106,10 +137,14 @@ class Game:
 
     def update_game(self):
         """Download newer versions of the game's setup files."""
-        logger.debug(f"{self.name}.update == {self.update}")
-        if self.needs_update: # TODO: check needed?!
-            self.download_files()
-        # TODO: delete old files after dl
+        logger.debug(f"{self.name}.update == {self.needs_update}")
+        if not self.needs_update:
+            return
+        # Delete old files
+        for file in self.old_files:
+            file_path = os.path.join(self.download_path, file)
+            system.rm(file_path)
+        self.download_setup_files()
 
     def install(self, install_dir, platform):
         """Install the game.
@@ -127,11 +162,11 @@ class Game:
 
         # Check for local files first and download latest installer if either
         # outdated or nonexistent
-        if self.local_files != []:
-            if self.needs_update:
-                self.update_game()
+        logger.debug(f"{self.download_files}")
+        if self.download_files != [] and self.needs_update:
+            self.update_game()
         else:
-            self.download_files()
+            self.download_setup_files()
 
         try:
             installer_info = self.installers[platform]
@@ -140,11 +175,11 @@ class Game:
             sys.exit(2)
 
         installer_file = os.path.basename(installer_info)
-        installer = os.path.join(self.local_path, installer_file)
+        installer = os.path.join(self.download_path, installer_file)
 
         # Create temp dir inside install_dir
         temp_dir = os.path.join(install_dir, "tmp/")
-        system.mkdir(temp_dir)
+        system.mkdir(temp_dir)  # TODO: what to do when path already exists?
 
         if platform == 4:
             # Extract game files
@@ -159,7 +194,7 @@ class Game:
                 system.move(file_path, install_dir)
 
             # Remove temp_dir
-            system.rm(temp_dir)
+            system.rmdir(temp_dir)
 
         elif platform == 1:
             logger.debug(f"Installing {self.name}. Platform = {platform}")
@@ -170,10 +205,11 @@ class Game:
             pass
 
         self.installed = True
+        self.install_path = install_dir
         print(f"{self.name} installed successfully.")
 
     def __str__(self):
         return self.name
 
     def __repr__(self):
-        return f"""{type(self).__name__}({self.name}, GAME INFO, {self.local_path})"""
+        return f"""{type(self).__name__}({self.name}, GAME INFO, {self.download_path})"""

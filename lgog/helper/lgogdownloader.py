@@ -9,7 +9,7 @@ def update_cache():
 
     print("Updating game data...")
     run_lgogdownloader(args)
-    print("Completed update")
+    print("Completed update\n")
 
 
 def download(game_name, platform, file_id=None):
@@ -30,7 +30,7 @@ def download(game_name, platform, file_id=None):
 
     print(f"Downloading file(s) for {game_name}...")
     run_lgogdownloader(args)
-    print("Download complete")
+    print("Download complete\n")
 
 
 def run_lgogdownloader(args):

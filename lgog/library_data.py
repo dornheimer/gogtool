@@ -47,7 +47,7 @@ class LibraryData(Directory):
                      gd_creation_date.strftime('%Y%m%d'), gd_days_since_last_update, str_outdated))
 
         if outdated:
-            print("Games data is outdated. Updating...")
+            print("Games data is outdated.")
         else:
             print("Games data is up-to-date.")
 
@@ -61,7 +61,6 @@ class LibraryData(Directory):
         """
         for entry in self.games_list:
             if entry['gamename'] == game_name:
-                logger.debug(f"Game info for {game_name} found")
                 return entry
 
         logger.warning(f"Game info for {game_name} not found")

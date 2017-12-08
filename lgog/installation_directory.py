@@ -30,11 +30,10 @@ class InstallDir(Directory):
             install_name = self._convert_title_format(game["title"])
             install_name_alt = game_name.replace("_", "-")
             if install_name in dir_contents or install_name_alt in dir_contents:
-                logger.debug(f"{install_name} found in installation directory.")
+                logger.debug(f"{install_name} found in installation directory")
+                install_path = os.path.join(self.path, game_name)
                 # Use "gamename" as identifier for consistency
-                self.installed_games_dict[game_name] = install_name
-
-        logger.debug(f"Installed games: {', '.join(self.installed_games)}")
+                self.installed_games_dict[game_name] = install_name, install_path
 
     # manage save games??
     # connect to lutris??
@@ -44,6 +43,8 @@ class InstallDir(Directory):
         no_specials = special_chars.sub(" ", game_title)
         multiple_spaces = re.compile(r"\s{2,}")
         install_name = multiple_spaces.sub(" ", no_specials)
-        logger.debug(f"Install name for {game_title} is: {install_name}")
 
         return install_name
+
+    def get_path(self, game_name):
+        return self.installed_games_dict[game_name][1]
