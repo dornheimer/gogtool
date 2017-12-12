@@ -13,8 +13,8 @@ def parse_command_line():
                         help="delete outdated setup files after update")
     parser.add_argument("--list", action="store_true",
                         help="list outdated setup files")
-    parser.add_argument("--log", nargs="?", const="lgog.log",
-                        help="save output to log file (default='lgog.log')")
+    parser.add_argument("--log", nargs="?", const="gogtool.log",
+                        help="save output to log file (default='gogtool.log')")
     parser.add_argument("--debug", nargs="?", const="debug", metavar="logging.LEVEL",
                         choices=["info", "debug", "warning", "critical", "error", "notset"],
                         help="""set logger level for console (default=INFO).

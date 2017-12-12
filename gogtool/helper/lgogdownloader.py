@@ -1,6 +1,6 @@
 """Functions that make direct use of lgogdownloader"""
 
-from lgog.helper import run
+from gogtool.helper import run
 
 
 def update_cache():

@@ -1,6 +1,6 @@
 """Module for parsing config files."""
 
-from lgog.helper.log import logger
+from gogtool.helper.log import logger
 
 
 def parse_config(path, key=None):

@@ -2,15 +2,15 @@
 import os
 import sys
 
-import lgog.helper.lgogdownloader as lgogdownloader
-import lgog.helper.log as log
-from lgog.download_directory import DownloadDir
-from lgog.installation_directory import InstallDir
-from lgog.library_data import LibraryData
-from lgog.local_library import LocalLibrary
-from lgog.helper.config import parse_config
-from lgog.helper.command_line import parse_command_line
-from lgog.helper.log import logger
+import gogtool.helper.lgogdownloader as lgogdownloader
+import gogtool.helper.log as log
+from gogtool.download_directory import DownloadDir
+from gogtool.installation_directory import InstallDir
+from gogtool.library_data import LibraryData
+from gogtool.local_library import LocalLibrary
+from gogtool.helper.config import parse_config
+from gogtool.helper.command_line import parse_command_line
+from gogtool.helper.log import logger
 
 
 def main(args):

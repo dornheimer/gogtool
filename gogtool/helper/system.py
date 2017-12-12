@@ -4,7 +4,7 @@ import os
 import shutil
 import sys
 
-from lgog.helper.log import logger
+from gogtool.helper.log import logger
 
 
 def mkdir(directory):

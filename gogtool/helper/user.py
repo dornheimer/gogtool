@@ -1,6 +1,6 @@
 """Functions that handle user interaction."""
 
-from lgog.helper.log import logger
+from gogtool.helper.log import logger
 
 
 def confirm(prompt, default=False):

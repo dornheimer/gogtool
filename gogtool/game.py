@@ -1,11 +1,11 @@
 import os
 import sys
 
-import lgog.helper.lgogdownloader as lgogdownloader
-from lgog.helper import user
-from lgog.helper import run
-from lgog.helper import system
-from lgog.helper.log import logger
+import gogtool.helper.lgogdownloader as lgogdownloader
+from gogtool.helper import user
+from gogtool.helper import run
+from gogtool.helper import system
+from gogtool.helper.log import logger
 
 
 class Game:

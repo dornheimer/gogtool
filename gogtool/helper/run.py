@@ -2,7 +2,7 @@
 
 import subprocess
 
-from lgog.helper.log import logger
+from gogtool.helper.log import logger
 
 
 def command(args):

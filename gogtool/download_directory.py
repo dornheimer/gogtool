@@ -1,9 +1,9 @@
 import os
 
-from lgog.helper import user
-from lgog.helper import system
-from lgog.helper.directory import Directory
-from lgog.helper.log import logger
+from gogtool.helper import user
+from gogtool.helper import system
+from gogtool.helper.directory import Directory
+from gogtool.helper.log import logger
 
 
 class DownloadDir(Directory):

@@ -1,8 +1,8 @@
 import os
 import re
 
-from lgog.helper.directory import Directory
-from lgog.helper.log import logger
+from gogtool.helper.directory import Directory
+from gogtool.helper.log import logger
 
 
 class InstallDir(Directory):

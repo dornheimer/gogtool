@@ -1,8 +1,8 @@
 import os
 
-from lgog.game import Game
-from lgog.helper import user
-from lgog.helper.log import logger
+from gogtool.game import Game
+from gogtool.helper import user
+from gogtool.helper.log import logger
 
 
 class LocalLibrary:

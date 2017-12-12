@@ -1,7 +1,7 @@
 import os
 import sys
 
-from lgog.helper.log import logger
+from gogtool.helper.log import logger
 
 
 class Directory:
