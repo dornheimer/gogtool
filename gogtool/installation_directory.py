@@ -26,7 +26,7 @@ class InstallDir(Directory):
         logger.info("Scanning for installed games...")
         dir_contents = os.listdir(self.path)
         for game in game_library.games.values():
-            install_names = self._convert_title_format(game.title)
+            install_names = self._guess_title_format(game.title)
 
             for iname in install_names:
                 if iname in dir_contents:
@@ -45,7 +45,10 @@ class InstallDir(Directory):
     # TODO: manage save games
     # TODO: connect to lutris?
 
-    def _convert_title_format(self, game_title):
+    def _guess_title_format(self, game_title):
+        """Guess the name of the installation directory of the game (based on
+        its title).
+        """
         install_names = []
 
         # Convert titles with special chars and replace consecutive spaces
