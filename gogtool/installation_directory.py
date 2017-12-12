@@ -35,6 +35,7 @@ class InstallDir(Directory):
                     install_path = os.path.join(self.path, game_name)
                     # Use "gamename" as identifier for consistency
                     self.installed_games_dict[game_name] = iname, install_path
+                    break
 
     def initialize_game(self, game):
         if game.name in self.installed_games_dict:
