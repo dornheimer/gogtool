@@ -35,6 +35,11 @@ class InstallDir(Directory):
                 # Use "gamename" as identifier for consistency
                 self.installed_games_dict[game_name] = install_name, install_path
 
+    def initialize_game(self, game):
+        if game.name in self.installed_games_dict:
+            game.installed = True
+            game.install_path = self.get_path(game.name)
+
     # manage save games??
     # connect to lutris??
     def _convert_title_format(self, game_title):

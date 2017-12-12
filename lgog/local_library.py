@@ -34,26 +34,10 @@ class LocalLibrary:
     def _add_games(self):
         for game in self.library_data.games:
             game_data = self.library_data.get_game_data(game)
-            download_path = self.download_dir.get_path(game)
-            download_files = self.download_dir.get_files(game)
-            game_object = Game(game_data,
-                               download_path,
-                               download_files)
+            game_object = Game(game_data)
 
-            if download_files is not None:
-                if not download_files:  # Empty folder
-                    prompt = (f"Folder for {game} is empty. Download latest installer?")
-                    if user.confirm(prompt):
-                        game_object.download = True
-                        game_object.conf = True
-                else:
-                    game_object.downloaded = True
-
-            installed = game in self.install_dir.installed_games
-            if installed:
-                game_object.installed = True
-                game_object.install_path = self.install_dir.get_path(game)
-
+            self.download_dir.initialize_game(game_object)
+            self.install_dir.initialize_game(game_object)
             self.games[game] = game_object
 
         print(f"{self.library_data.size} games in GOG library")
@@ -62,7 +46,6 @@ class LocalLibrary:
 
     def _check_for_updates(self):
         logger.info("Checking for updates...")
-        names = [g.name for g in self.downloaded_games]
         for game in self.downloaded_games:
             game.check_for_update()
 

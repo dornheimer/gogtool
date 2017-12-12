@@ -1,5 +1,6 @@
 import os
 
+from lgog.helper import user
 from lgog.helper import system
 from lgog.helper.directory import Directory
 from lgog.helper.log import logger
@@ -44,6 +45,20 @@ class DownloadDir(Directory):
             setup_files[game_name] = files
 
         self.setup_files = setup_files
+
+    def initialize_game(self, game):
+        download_files = self.get_files(game.name)
+        if download_files is not None:
+            if not download_files:  # Empty folder
+                prompt = (f"Folder for {game} is empty. Download latest installer?")
+                if user.confirm(prompt):
+                    game.download = True
+                    game.conf = True
+            else:
+                game.downloaded = True
+
+        game.download_files = download_files
+        game.download_path = self.get_path(game)
 
     def delete_files(self, game):
         """Delete all files of specified game.

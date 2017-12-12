@@ -12,7 +12,7 @@ class Game:
     """
     Data and methods related to a single game in the library.
     """
-    def __init__(self, game_data, download_path, download_files):
+    def __init__(self, game_data):
         self.game_data = game_data
 
         self.name = None
@@ -21,8 +21,8 @@ class Game:
         self.dlcs = {}
 
         self.downloaded = False
-        self.download_path = download_path
-        self.download_files = download_files
+        self.download_path = None
+        self.download_files = None
 
         self.installed = False
         self.install_path = None
