@@ -126,7 +126,7 @@ class Game:
         # Check for local files first and download latest installer if either
         # outdated or nonexistent
         logger.debug(f"{self.download_files}")
-        if self.download_files != [] and self.needs_update:
+        if self.download_files and self.needs_update:
             self.update_game()
         else:
             self.download_setup_files()

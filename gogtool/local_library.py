@@ -17,19 +17,19 @@ class LocalLibrary:
 
     @property
     def downloaded_games(self):
-        return [game for name, game in self.games.items() if game.downloaded]
+        return [game for game in self.games.values() if game.downloaded]
 
     @property
     def installed_games(self):
-        return [game for name, game in self.games.items() if game.installed]
+        return [game for game in self.games.values() if game.installed]
 
     @property
     def games_with_update(self):
-        return [game for name, game in self.games.items() if game.needs_update]
+        return [game for game in self.games.values() if game.needs_update]
 
     @property
     def download_queue(self):
-        return [game for name, game in self.games.items() if game.download]
+        return [game for game in self.games.values() if game.download]
 
     def _add_games(self):
         for game in self.library_data.games:
@@ -50,7 +50,7 @@ class LocalLibrary:
             game.check_for_update()
 
         print("\nGames with outdated setup files:")
-        print("\n".join([g.name for g in self.games_with_update]), end="\n\n")
+        print("\n".join([g.name for g in self.games_with_update]), "\n")
         logger.debug(f"{len(self.games_with_update)} games with updates")
 
     def update_games(self, download_all=False, delete_by_default=False):

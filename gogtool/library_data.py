@@ -116,13 +116,13 @@ class LibraryData(Directory):
     def is_outdated(self):
         """Check if game details file is older than two days."""
         logger.info("Checking games data creation date...")
-        gd_creation_date = datetime.strptime(self.date, "%Y%m%dT%H%M%S")
-        gd_days_since_last_update = (datetime.now() - gd_creation_date).days
-        outdated = gd_days_since_last_update >= 2
+        creation_date = datetime.strptime(self.date, "%Y%m%dT%H%M%S")
+        days_since_last_update = (datetime.now() - creation_date).days
+        outdated = days_since_last_update >= 2
 
         str_outdated = "needs update" if outdated else "ok"
         logger.debug("gamedetails.json created on: {}, age: {} days ({})".format(
-                     gd_creation_date.strftime('%Y%m%d'), gd_days_since_last_update, str_outdated))
+                     creation_date.strftime('%Y%m%d'), days_since_last_update, str_outdated))
 
         return outdated
 
