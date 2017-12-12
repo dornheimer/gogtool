@@ -25,9 +25,9 @@ class InstallDir(Directory):
         """
         logger.info("Scanning for installed games...")
         dir_contents = os.listdir(self.path)
-        for game in game_library.games_list:
-            game_name = game["gamename"]
-            install_name = self._convert_title_format(game["title"])
+        for game in game_library.games.values():
+            game_name = game.gamename
+            install_name = self._convert_title_format(game.title)
             install_name_alt = game_name.replace("_", "-")
             if install_name in dir_contents or install_name_alt in dir_contents:
                 logger.debug(f"{install_name} found in installation directory")

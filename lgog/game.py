@@ -12,9 +12,13 @@ class Game:
     """
     Data and methods related to a single game in the library.
     """
-    def __init__(self, name, game_info, download_path, download_files):
-        self.name = name
-        self.game_info = game_info
+    def __init__(self, game_data, download_path, download_files):
+        self.game_data = game_data
+
+        self.name = None
+        self.setup_files = {}
+        self.installers = {}
+        self.dlcs = {}
 
         self.downloaded = False
         self.download_path = download_path
@@ -23,89 +27,48 @@ class Game:
         self.installed = False
         self.install_path = None
 
-        self.setup_files = {}
-        self.installers = {}
-        self.dlc = {}
-
         self.needs_update = False
         self.download = False
-
         self.conf = False
         self.old_files = []
 
-        self._get_setup_files()
-        self._get_dlc()
+        self._get_game_data()
+
+    @property
+    def available_platforms(self):
+        return list(self.game_data.setup_files)
 
     @property
     def platform(self):
         """Set platform to linux if available.
 
         Note:
-            4=linux, 1=windows
+            4=linux, 1=windows, 2=mac
         """
-        return 4 if 4 in self.setup_files else 1
+        if 4 in self.available_platforms:
+            return 4
+        elif 1 in self.available_platforms:
+            return 1
+        elif 2 in self.available_platforms:
+            return 2
 
-    # def _extract_from_game_info(self, key, dlc=False):
-    #     """Get item from game_info dictionary.
-    #
-    #     :param key: dictionary key of the item.
-    #     :param dlc: look in dlc data for game
-    #     """
-    #     values = {}
-    #     try:
-    #         for v in self.game_info[key]:
-    #             values.setdefault(v['platform'], []).append(v['path'])
-    #
-    #         return values
-    #
-    #     except KeyError:
-    #         logger.debug(f"No {key} for {self.name} found")
-    #         return None
+    @property
+    def has_dlc(self):
+        return self.game_data.dlcs != {}
 
-    def _get_installers(self, data=None, dlc=False, id_prefix='en'):
-        """
-        Get setup files from game info.
+    def _get_game_data(self):
+        self.name = self.game_data.gamename
+        self.setup_files = self.game_data.setup_files
+        self._get_installers()
+        self.dlcs = self.game_data.dlcs
 
-        :param dlc: look in dlc data for game
-        :param id_prefix: language identifier string (default='en')
-        """
-        platforms = {4, 1}
-        installers = {}
-
-        if data is None:
-            data = self.game_info
-
-        try:
-            if dlc:
-                data = self.game_info["dlcs"]
-                for el in data:
-                    if "installers" in el:
-                        logger.debug(f"dlc: {el['gamename']} for {self.name} found")
-                        installers = self._get_installers(el)
-            else:
-                for i in data["installers"]:
-                    if i['platform'] in platforms and i['id'].startswith(id_prefix):
-                        installers.setdefault(i['platform'], []).append(i['path'])
-                        installers["game_name"] = i["gamename"]
-        except KeyError:
-            if not dlc:
-                logger.debug(f"No installer for {self.name} found")
-            return None
-        else:
-            return installers
-
-    def _get_setup_files(self):
-        self.setup_files = self._get_installers()
-
+    def _get_installers(self, id_prefix='en'):
         # Some games have multiple setup files and only one executable installer
-        for platform, files in self.setup_files.items():
-            for file_name in files:
-                if file_name.endswith((".exe", ".sh", ".dmg")):
-                    self.installers[platform] = file_name
+        for platform, installers in self.setup_files.items():
+            for inst in installers:
+                if inst.file_name.endswith((".exe", ".sh", ".dmg")):
+                    self.installers[platform] = inst.file_name
                     break
-
-    def _get_dlc(self):
-        self.dlc = self._get_installers(dlc=True)
 
     def check_for_update(self):
         """Compare local file versions to those on the server.
@@ -114,10 +77,10 @@ class Game:
 
         :return: True or False
         """
-        server_path = self.setup_files[self.platform]
-        server_files = [os.path.basename(sp) for sp in server_path]
+        installers_server = self.setup_files[self.platform]
+        inst_filenames = [i.file_name for i in installers_server]
 
-        same_files = all([(sf in self.download_files) for sf in server_files])
+        same_files = all([(fn in self.download_files) for fn in inst_filenames])
         logger.debug(f"{self.name}: downloaded files match server_files ({same_files})")
         if not same_files:
             self.needs_update = True

@@ -30,14 +30,15 @@ class DownloadDir(Directory):
         self._scan_for_games(game_library)
 
         logger.info("Scanning local directory for setup files...")
+        # 1. Check if file is on server
+        # 2. Check if file name matches pattern
 
         setup_files = {}
         for game_name in self.games:
             game_path = os.path.join(self.path, game_name)
             game_files = os.listdir(game_path)
 
-            alt_name = game_name.split("_")[0]
-            prefixes = ('gog', 'setup', game_name, alt_name)
+            prefixes = self._guess_prefixes(game_name)
             files = [gf for gf in game_files if gf.startswith(prefixes)]
             logger.debug(f"{len(files)} file(s) for {game_name} found")
             setup_files[game_name] = files
@@ -78,3 +79,17 @@ class DownloadDir(Directory):
         else:
             logger.debug(f"Could not find '{game_name}' in download directory")
             return None
+
+    def _guess_prefixes(self, game_name):
+        prefixes = ['gog', 'setup', game_name]
+
+        # Name has "_game" appended (tyranny_game)
+        prefixes.append(game_name.split("_")[0])
+
+        # Name separates letters and digits (tis100 -> tis_100)
+        for i, char in enumerate(game_name):
+            if not char.isalpha():
+                prefixes.append(game_name[:i])
+                break
+
+        return tuple(prefixes)

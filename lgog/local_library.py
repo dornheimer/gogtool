@@ -33,16 +33,15 @@ class LocalLibrary:
 
     def _add_games(self):
         for game in self.library_data.games:
-            game_info = self.library_data.get_game_info(game)
+            game_data = self.library_data.get_game_data(game)
             download_path = self.download_dir.get_path(game)
             download_files = self.download_dir.get_files(game)
-            game_object = Game(game,
-                               game_info,
+            game_object = Game(game_data,
                                download_path,
                                download_files)
 
             if download_files is not None:
-                if download_files == []:  # Empty folder
+                if not download_files:  # Empty folder
                     prompt = (f"Folder for {game} is empty. Download latest installer?")
                     if user.confirm(prompt):
                         game_object.download = True
