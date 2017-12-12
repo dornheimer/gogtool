@@ -10,7 +10,7 @@ levels = {"debug": logging.DEBUG,
           "error": logging.ERROR,
           "critical": logging.CRITICAL}
 
-LOG_FILENAME = os.path.join(os.getenv("HOME"), "python/lgog_manager/gogtool.log")
+LOG_FILENAME = os.path.join(os.getenv("HOME"), "python/gogtool/gogtool.log")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
