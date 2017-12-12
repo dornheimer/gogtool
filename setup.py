@@ -2,12 +2,12 @@
 from setuptools import setup
 
 setup(
-    name='lgog_manager',
+    name='gogtool',
     version=0.1,
-    license='GPL-3',
+    license='WTFPL',
     author='iiu',
     author_email='iiu@posteo.net',
-    packages=['lgog'],
-    scripts=['lgog'],
+    packages=['gogtool'],
+    scripts=['gogtool.py'],
     description='Small (and quite useless) extension for lgogdownloader',
 )
