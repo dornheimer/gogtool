@@ -2,8 +2,8 @@ from datetime import datetime
 import json
 import os
 
+from .game import GameData
 from gogtool.helper.directory import Directory
-from gogtool.library_data.game import GameData
 from gogtool.helper.log import logger
 
 

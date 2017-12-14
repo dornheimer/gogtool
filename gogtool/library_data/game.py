@@ -1,5 +1,5 @@
+from .installer import Installer
 from gogtool.helper.log import logger
-from gogtool.library_data.installer import Installer
 
 
 class GameData:
