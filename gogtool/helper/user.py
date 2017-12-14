@@ -33,7 +33,8 @@ def verify_response(prompt, reponses, attempts=3):
 
     :param prompt: Prompt as passed in from user.confirm().
     :param responses: List of valid user responses to the prompt.
-    :param attempts: Number of attempts to get valid user response (default=3).
+    :param attempts: Number of attempts to get valid user response.
+        (default = 3)
     """
     logger.debug(f"Valid reponses are: {', '.join(reponses)}")
     for attempt in range(attempts):

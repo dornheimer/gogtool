@@ -43,7 +43,7 @@ class Game:
         """Set platform to linux if available.
 
         Note:
-            4=linux, 1=windows, 2=mac
+            1 = Windows, 2 = MacOS, 4 = Linux
         """
         if 4 in self.available_platforms:
             return 4
@@ -63,7 +63,12 @@ class Game:
         self.dlcs = self.game_data.dlcs
 
     def _get_installers(self, id_prefix='en'):
-        # Some games have multiple setup files and only one executable installer
+        """Get executable installer files from setup files data.
+
+        Some games have multiple setup files and only one executable installer.
+
+        :param id_prefix: Language prefix of the installer file.
+        """
         for platform, installers in self.setup_files.items():
             for inst in installers:
                 if inst.file_name.endswith((".exe", ".sh", ".dmg")):
@@ -71,12 +76,7 @@ class Game:
                     break
 
     def check_for_update(self):
-        """Compare local file versions to those on the server.
-
-        Result is stored in self.update.
-
-        :return: True or False
-        """
+        """Compare local file versions to those on the server."""
         installers_server = self.setup_files[self.platform]
         inst_filenames = [i.file_name for i in installers_server]
 
@@ -89,7 +89,7 @@ class Game:
     def download_setup_files(self, file_id=None):
         """Download setup files for game.
 
-        :param file_id: optionally download file by ID instead.
+        :param file_id: Optionally download file by ID instead.
         """
         if file_id is not None:
             lgogdownloader.download(self.name, file_id)

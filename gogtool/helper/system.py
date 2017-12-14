@@ -8,7 +8,7 @@ from gogtool.helper.log import logger
 
 
 def mkdir(directory):
-    """Recursively create directory."""
+    """Recursively create a directory."""
     try:
         os.makedirs(directory)
     except OSError:

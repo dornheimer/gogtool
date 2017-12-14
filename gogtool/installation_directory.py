@@ -18,8 +18,8 @@ class InstallDir(Directory):
         return list(self.installed_games_dict.keys())
 
     def scan_for_games(self, game_library):
-        """Scan local installatin directory and return a list of installed
-        games.
+        """Scan local installation directory add game to class dictionary if
+        found.
 
         :param game_library: GOG user library
         """
@@ -41,9 +41,6 @@ class InstallDir(Directory):
         if game.name in self.installed_games_dict:
             game.installed = True
             game.install_path = self.get_path(game.name)
-
-    # TODO: manage save games
-    # TODO: connect to lutris?
 
     def _guess_title_format(self, game_title):
         """Guess the name of the installation directory of the game (based on

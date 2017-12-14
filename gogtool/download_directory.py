@@ -47,6 +47,13 @@ class DownloadDir(Directory):
         self.setup_files = setup_files
 
     def initialize_game(self, game):
+        """Pass information of game to its Game object.
+
+        If an empty folder was found, ask if latest installer should be
+            downloaded.
+
+        :param game: A Game object.
+        """
         download_files = self.get_files(game.name)
         if download_files is not None:
             if not download_files:  # Empty folder
@@ -63,7 +70,7 @@ class DownloadDir(Directory):
     def delete_files(self, game):
         """Delete all files of specified game.
 
-        :param Game game: A Game object.
+        :param game: A Game object.
         """
         print(f"Deleting files for {game.name}...")
         files = []
@@ -96,6 +103,10 @@ class DownloadDir(Directory):
             return None
 
     def _guess_prefixes(self, game_name):
+        """Guess prefix of the setup file.
+
+        :return: A tuple with prefix strings.
+        """
         prefixes = ['gog', 'setup', game_name]
 
         # Name has "_game" appended (tyranny_game)

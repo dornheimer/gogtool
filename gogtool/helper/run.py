@@ -8,7 +8,7 @@ from gogtool.helper.log import logger
 def command(args):
     """Run process as if it were executed from the command line.
 
-    :param args: List of command line arguments
+    :param args: List of command line arguments.
     """
     args_str = ', '.join(args)
     logger.debug(f"Executing '{args_str}'...")

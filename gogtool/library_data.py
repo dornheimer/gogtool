@@ -7,6 +7,9 @@ from gogtool.helper.log import logger
 
 
 class GameData:
+    """
+    Parsed data from JSON dictionary with methods to recognize setup files.
+    """
     def __init__(self, game_data):
         self.game_data = game_data
 
@@ -28,6 +31,11 @@ class GameData:
         self._initialize_dlcs()
 
     def _initialize_setup_files(self):
+        """Look for setup files group them by platform.
+
+        Note:
+            Creates InstallerData objects
+        """
         try:
             installer_data = self.game_data["installers"]
         except KeyError:
@@ -39,6 +47,11 @@ class GameData:
                     inst["platform"], []).append(InstallerData(inst))
 
     def _initialize_dlcs(self):
+        """Look for DLC and add it if it exists.
+
+        Note:
+            Creates DLCData objects
+        """
         try:
             dlc_data = self.game_data["dlcs"]
             logger.debug(f"DLC for {self.gamename} found")
@@ -50,6 +63,9 @@ class GameData:
 
 
 class DLCData(GameData):
+    """
+    Parsed data from JSON dictionary, inherits from GameData.
+    """
     def __init__(self, game_data):
             self.game_data = game_data
 
@@ -65,7 +81,7 @@ class DLCData(GameData):
 
 class InstallerData:
     """
-    Contains all data related to a game or DLC.
+    Contains all data related to setup files of a game or DLC.
     """
     def __init__(self, installer_data):
         self.__dict__ = installer_data
@@ -76,6 +92,9 @@ class InstallerData:
 
 
 class LibraryData(Directory):
+    """
+    Library data imported from lgogdownloader's gamedetails.json.
+    """
     def __init__(self, path):
         super().__init__(path)
         self.library_data = {}
@@ -129,8 +148,8 @@ class LibraryData(Directory):
     def get_game_data(self, game_name):
         """Get data associated with game from the library data.
 
-        :param game_name: game name as stored in DownloadDir.
-        :return: dicitionary with information associated with game_name.
+        :param game_name: Game name as stored in DownloadDir.
+        :return: Dictionary entry for game_name.
         """
         try:
             return self.games[game_name]
