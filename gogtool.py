@@ -6,7 +6,7 @@ import gogtool.helper.lgogdownloader as lgogdownloader
 import gogtool.helper.log as log
 from gogtool.download_directory import DownloadDir
 from gogtool.installation_directory import InstallDir
-from gogtool.library_data import LibraryData
+from gogtool.library_data.library import LibraryData
 from gogtool.local_library import LocalLibrary
 from gogtool.helper.config import parse_config
 from gogtool.helper.command_line import parse_command_line
