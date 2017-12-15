@@ -91,6 +91,7 @@ class Game:
 
         :param file_id: Optionally download file by ID instead.
         """
+        # If file is already downloaded, lgogdownloader will skip
         if file_id is not None:
             lgogdownloader.download(self.name, file_id)
         else:
@@ -101,11 +102,11 @@ class Game:
     def update_game(self):
         """Download newer versions of the game's setup files."""
         logger.debug(f"{self.name}.update == {self.needs_update}")
-        if not self.needs_update:
+        if not self.download:
             return
         # Delete old files
-        for file in self.old_files:
-            file_path = os.path.join(self.download_path, file)
+        for file_ in self.old_files:
+            file_path = os.path.join(self.download_path, file_)
             system.rm(file_path)
         self.download_setup_files()
 
@@ -125,10 +126,9 @@ class Game:
 
         # Check for local files first and download latest installer if either
         # outdated or nonexistent
-        logger.debug(f"{self.download_files}")
-        if self.download_files and self.needs_update:
+        if self.downloaded and self.needs_update:
             self.update_game()
-        else:
+        elif not self.downloaded:
             self.download_setup_files()
 
         try:
@@ -142,7 +142,7 @@ class Game:
 
         # Create temp dir inside install_dir
         temp_dir = os.path.join(install_dir, "tmp/")
-        system.mkdir(temp_dir)  # TODO: what to do when path already exists?
+        system.mkdir(temp_dir)
 
         if platform == 4:
             # Extract game files
@@ -152,12 +152,15 @@ class Game:
             # Move files from temp_dir to destination
             game_files = os.path.join(temp_dir, "data/noarch/")
             logger.debug(f"Moving files from {game_files} to {install_dir}")
-            for file in os.listdir(game_files):
-                file_path = os.path.join(game_files, file)
-                system.move(file_path, install_dir)
+            system.update_dir(game_files, install_dir)
 
             # Remove temp_dir
             system.rmdir(temp_dir)
+
+            # Save list of file names to text file
+            text_file = os.path.join(install_dir, "files.txt")
+            list_files = ["unzip", "-Z", "-1", installer, ">>", text_file]
+            run.command(list_files, shell=True)
 
         elif platform == 1:
             logger.debug(f"Installing {self.name}. Platform = {platform}")

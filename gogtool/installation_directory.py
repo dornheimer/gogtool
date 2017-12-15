@@ -32,7 +32,7 @@ class InstallDir(Directory):
                 if iname in dir_contents:
                     logger.debug(f"{iname} found in installation directory")
                     game_name = game.gamename
-                    install_path = os.path.join(self.path, game_name)
+                    install_path = os.path.join(self.path, iname)
                     # Use "gamename" as identifier for consistency
                     self.installed_games_dict[game_name] = iname, install_path
                     break

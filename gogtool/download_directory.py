@@ -65,7 +65,7 @@ class DownloadDir(Directory):
                 game.downloaded = True
 
         game.download_files = download_files
-        game.download_path = self.get_path(game)
+        game.download_path = self.get_path(game.name)
 
     def delete_files(self, game):
         """Delete all files of specified game.

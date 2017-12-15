@@ -96,8 +96,8 @@ class LocalLibrary:
     def install_game(self, game_name, platform=4):
         """Install game into installation directory.
 
-        Note:
-            Path is path_to_install_dir/gog_id/
+        Path is install_dir/game_name/ or install_dir/install_name (if game is
+        already installed).
 
         :param game_name: Name of the game as found in the library data.
         :param platform: Platform of the installer (1 = Windows, 2 = MacOS,
@@ -105,5 +105,13 @@ class LocalLibrary:
         """
         logger.debug(f"Installing {game_name}...")
         game = self.games.get(game_name)
-        dest = os.path.join(self.install_dir.path, game.name)
+
+        # Check if game is already installed and define destination path with
+        # trailing separator
+        if game.installed and game.install_path is not None:
+            dest = os.path.join(game.install_path, "")
+            logger.debug(f"{game.name} is installed in {game.install_path}")
+        else:
+            dest = os.path.join(self.install_dir.path, game.name, "")
+
         game.install(dest, platform)
