@@ -13,45 +13,37 @@ class LibraryData(Directory):
     """
     def __init__(self, path):
         super().__init__(path)
-        self.library_data = {}
+        self._library_data = {}
 
-        self.date = None
-        self.games = {}
-
-        self._get_library_data()
+        self._import_library_data()
         self._initialize_library()
 
-    def _get_library_data(self):
+    def __iter__(self):
+        return iter(self._games.values())
+
+    def _import_library_data(self):
         """Convert gamedetails.json file into a python dictionary."""
         with open(self.path) as data:
             library_data = json.load(data)
 
-        self.library_data = library_data
+        self._library_data = library_data
         logger.debug(f"imported data from {os.path.basename(self.path)}")
 
     def _initialize_library(self):
-        self.date = self.library_data["date"]
-
-        for game_data in self.library_data["games"]:
-            self.games[game_data["gamename"]] = GameData(game_data)
-
-    @property
-    def games_list(self):
-        return list(self.games)
+        for game_data in self._library_data["games"]:
+            game_name = game_data["gamename"]
+            self._games[game_name] = GameData(game_data)
 
     @property
     def game_titles(self):
-        return [g.title for g in self.games.values()]
-
-    @property
-    def size(self):
-        return len(self.games)
+        return [game.title for game in self]
 
     @property
     def is_outdated(self):
         """Check if game details file is older than two days."""
         logger.info("Checking games data creation date...")
-        creation_date = datetime.strptime(self.date, "%Y%m%dT%H%M%S")
+        date = self._library_data["date"]
+        creation_date = datetime.strptime(date, "%Y%m%dT%H%M%S")
         days_since_last_update = (datetime.now() - creation_date).days
         outdated = days_since_last_update >= 2
 
@@ -60,15 +52,3 @@ class LibraryData(Directory):
                      creation_date.strftime('%Y%m%d'), days_since_last_update, str_outdated))
 
         return outdated
-
-    def get_game_data(self, game_name):
-        """Get data associated with game from the library data.
-
-        :param game_name: Game name as stored in DownloadDir.
-        :return: Dictionary entry for game_name.
-        """
-        try:
-            return self.games[game_name]
-        except KeyError:
-            logger.warning(f"Game info for {game_name} not found")
-            return None

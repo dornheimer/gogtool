@@ -9,38 +9,35 @@ class InstallDir(Directory):
     """
     Store information about installed GOG games.
     """
-    def __init__(self, path):
-        super().__init__(path)
-        self.installed_games_dict = {}
-
-    @property
-    def installed_games(self):
-        return list(self.installed_games_dict.keys())
 
     def scan_for_games(self, game_library):
-        """Scan local installation directory add game to class dictionary if
+        """Scan local installation directory and add game to class dictionary if
         found.
 
-        :param game_library: GOG user library
+        Maps game_name to install_path in self._games.
+
+        :param game_library: GOG user library (a LibraryData object)
         """
         logger.info("Scanning for installed games...")
         dir_contents = os.listdir(self.path)
-        for game in game_library.games.values():
+        for game in game_library:
             install_names = self._guess_title_format(game.title)
 
             for iname in install_names:
                 if iname in dir_contents:
                     logger.debug(f"{iname} found in installation directory")
-                    game_name = game.gamename
                     install_path = os.path.join(self.path, iname)
-                    # Use "gamename" as identifier for consistency
-                    self.installed_games_dict[game_name] = iname, install_path
+                    self._games[game.gamename] = install_path
                     break
 
     def initialize_game(self, game):
-        if game.name in self.installed_games_dict:
+        """Pass information of game to its Game object.
+
+        :param game: A Game object.
+        """
+        if game.name in self._games:
             game.installed = True
-            game.install_path = self.get_path(game.name)
+            game.install_path = self[game.name]
 
     def _guess_title_format(self, game_title):
         """Guess the name of the installation directory of the game (based on
@@ -63,6 +60,3 @@ class InstallDir(Directory):
         install_names.append(install_name_alt1)
 
         return install_names
-
-    def get_path(self, game_name):
-        return self.installed_games_dict[game_name][1]

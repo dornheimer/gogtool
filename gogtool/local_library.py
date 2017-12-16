@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 import os
 
 from gogtool.game import Game
@@ -5,7 +6,7 @@ from gogtool.helper import user
 from gogtool.helper.log import logger
 
 
-class LocalLibrary:
+class LocalLibrary(Mapping):
     """
     Aggregates all available data and keeps track of every game in the library.
     """
@@ -18,21 +19,28 @@ class LocalLibrary:
         self._add_games()
         self._check_for_updates()
 
-    @property
-    def downloaded_games(self):
-        return [game for game in self.games.values() if game.downloaded]
+    def __len__(self):
+        return len(self.games)
 
-    @property
-    def installed_games(self):
-        return [game for game in self.games.values() if game.installed]
+    def __getitem__(self, game_name):
+        if game_name not in self.games:
+            try:
+                raise KeyError
+            except KeyError:
+                logger.debug(f"Could not find '{game_name}' in {type(self).__name__}")
+                return None
+        return self.games[game_name]
+
+    def __iter__(self):
+        return iter(self.games.values())
 
     @property
     def games_with_update(self):
-        return [game for game in self.games.values() if game.needs_update]
+        return [game for game in self if game.needs_update]
 
     @property
     def download_queue(self):
-        return [game for game in self.games.values() if game.download]
+        return [game for game in self if game.download]
 
     def _add_games(self):
         """Populate the library with all games in the user's GOG library.
@@ -40,22 +48,22 @@ class LocalLibrary:
         Games receive their data from LibraryData. DownloadDir and InstallDir
         look for the game and update its attributes accordingly.
         """
-        for game in self.library_data.games:
-            game_data = self.library_data.get_game_data(game)
-            game_object = Game(game_data)
+        for game_data in self.library_data:
+            game = Game(game_data)
 
-            self.download_dir.initialize_game(game_object)
-            self.install_dir.initialize_game(game_object)
-            self.games[game] = game_object
+            self.download_dir.initialize_game(game)
+            self.install_dir.initialize_game(game)
+            self.games[game.name] = game
 
-        print("{} games in GOG library".format(self.library_data.size))
-        print("{} downloaded".format(len(self.downloaded_games)))
-        print("{} installed".format(len(self.installed_games)))
+        print("{} games in GOG library".format(len(self.library_data)))
+        print("{} downloaded".format(len(self.download_dir)))
+        print("{} installed".format(len(self.install_dir)))
 
     def _check_for_updates(self):
         """Check every downloaded game for available updates."""
         logger.info("Checking for updates...")
-        for game in self.downloaded_games:
+        for game_name in self.download_dir:
+            game = self[game_name]
             game.check_for_update()
 
         print("\nGames with outdated setup files:")
@@ -104,7 +112,7 @@ class LocalLibrary:
             4 = Linux)
         """
         logger.debug(f"Installing {game_name}...")
-        game = self.games.get(game_name)
+        game = self[game_name]
 
         # Check if game is already installed and define destination path with
         # trailing separator

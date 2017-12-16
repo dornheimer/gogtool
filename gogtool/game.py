@@ -178,4 +178,4 @@ class Game:
         return self.name
 
     def __repr__(self):
-        return f"""{type(self).__name__}({self.name}, GAME INFO, {self.download_path})"""
+        return f"{type(self).__name__}({self.name!r}, GAME INFO, {self.download_path!r})"

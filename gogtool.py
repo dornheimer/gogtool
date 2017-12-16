@@ -34,7 +34,7 @@ def main(args):
         directory = parse_config(CONFIG_PATH, "directory")
 
     download_dir = DownloadDir(directory)
-    download_dir.scan_for_setup_files(library_data.games)
+    download_dir.scan_for_games(library_data)
 
     install_dir = InstallDir(INSTALL_PATH)
     install_dir.scan_for_games(library_data)
