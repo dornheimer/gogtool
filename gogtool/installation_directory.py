@@ -1,7 +1,7 @@
 import os
 import re
 
-from gogtool.helper.directory import Directory
+from .directory import Directory
 from gogtool.helper.log import logger
 
 

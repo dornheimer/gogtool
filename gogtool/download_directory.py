@@ -1,8 +1,8 @@
 import os
 
+from .directory import Directory
 from gogtool.helper import user
 from gogtool.helper import system
-from gogtool.helper.directory import Directory
 from gogtool.helper.log import logger
 
 
