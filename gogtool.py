@@ -4,8 +4,6 @@ import sys
 
 import gogtool.helper.lgogdownloader as lgogdownloader
 import gogtool.helper.log as log
-from gogtool.download_directory import DownloadDir
-from gogtool.installation_directory import InstallDir
 from gogtool.library_data import LibraryData
 from gogtool.local_library import LocalLibrary
 from gogtool.helper.config import parse_config
@@ -33,12 +31,6 @@ def main(args):
         # Get directory from lgog config by default
         DOWNLOAD_PATH = parse_config(CONFIG_PATH, "directory")
 
-    # download_dir = DownloadDir(DOWNLOAD_PATH)
-    # download_dir.scan_for_games(library_data)
-    #
-    # install_dir = InstallDir(INSTALL_PATH)
-    # install_dir.scan_for_games(library_data)
-
     local_library = LocalLibrary(library_data, DOWNLOAD_PATH, INSTALL_PATH)
 
     if args.install:
@@ -46,6 +38,13 @@ def main(args):
         logger.info(f"Installing: {', '.join(install_queue)}")
         for game_name in install_queue:
             local_library.install_game(game_name)
+        sys.exit()
+
+    if args.uninstall:
+        uninstall_queue = args.uninstall
+        logger.info(f"Uninstalling: {', '.join(uninstall_queue)}")
+        for game_name in uninstall_queue:
+            local_library.uninstall_game(game_name)
         sys.exit()
 
     if args.clean:

@@ -77,10 +77,10 @@ class Game:
         :param id_prefix: Language prefix of the installer file.
         """
         installers = {}
-        for platform, installers in self.setup_files.items():
-            for inst in installers:
-                if inst.file_name.endswith((".exe", ".sh", ".dmg")):
-                    self.installers[platform] = inst.file_name
+        for platform, setup_files in self.setup_files.items():
+            for sf in setup_files:
+                if sf.file_name.endswith((".exe", ".sh", ".dmg")):
+                    installers[platform] = sf.file_name
                     break
 
         return installers
@@ -108,7 +108,7 @@ class Game:
             lgogdownloader.download(self.name, self.platform)
             self.download_files = self.setup_files
 
-    def update_game(self):
+    def update(self):
         """Download newer versions of the game's setup files."""
         logger.debug(f"{self.name}.update == {self.needs_update}")
         if not self.download:
@@ -136,11 +136,12 @@ class Game:
         # Check for local files first and download latest installer if either
         # outdated or nonexistent
         if self.downloaded and self.needs_update:
-            self.update_game()
+            self.update()
         elif not self.downloaded:
             self.download_setup_files()
 
         try:
+            print(self.installers)
             installer_info = self.installers[platform]
         except KeyError:
             logger.error(f"{self.name}: No installer for platform '{platform}' found.")
@@ -181,6 +182,19 @@ class Game:
 
         self.install_path = install_dir
         print(f"{self.name} installed successfully.")
+
+    def uninstall(self, safe=True):
+        # Execute script if it exists (installed by GOG)
+        if self.uninstall_script is not None:
+            script_path = os.path.join(self.install_path, self.uninstall_script)
+            run.command(["sh", script_path])
+        # Delete all files in list (installed by gogtool)
+        elif self.install_files:
+            for file_path in self.install_files:
+                system.rm(file_path)
+        # Remove all files for game only if safe uninstall is disabled
+        elif not safe:
+            system.rmdir(self.path)
 
     def __str__(self):
         return self.name

@@ -104,7 +104,7 @@ class LocalLibrary(Mapping):
                     game.conf = True
 
         for game in self.download_queue:
-            game.update_game()
+            game.update()
 
         delete = delete_by_default
         if not delete_by_default:
@@ -140,20 +140,12 @@ class LocalLibrary(Mapping):
 
         game.install(dest, platform)
 
-    def uninstall_game(self, game):
-        """Uninstall game from install directory.
+    def uninstall_game(self, game_name):
+        """Uninstall game from install directory."""
+        logger.debug(f"Installing {game_name}...")
+        game = self[game_name]
 
-        Uses uninstaller script if found, or refers to files.txt generated
-        during install. If neither is exists, deletes all files from game
-        directory.
-        """
-        if game.uninstall_script:
-            pass
-            # execute script
-        elif files_list:
-            pass
-            # delete all files in list
-            # move logic to installdir?
+        if game in self.installed_games:
+            game.uninstall()
         else:
-            # delete all files
-            install_dir.delete_files(game)
+            logger.warning(f"{game_name} is not installed")

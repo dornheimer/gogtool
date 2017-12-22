@@ -25,6 +25,8 @@ def parse_command_line():
                         help="override default directory")
     parser.add_argument("--install", nargs="+",
                         help="install a game or a list of games")
+    parser.add_argument("--uninstall", nargs="+",
+                        help="uninstall a game or a list of games")
     parser.add_argument("--clean", action="store_true",
                         help="delete orphaned setup files")
 
