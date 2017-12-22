@@ -28,18 +28,18 @@ def main(args):
         lgogdownloader.update_cache()
 
     if args.directory:
-        directory = os.path.abspath(args.directory)
+        DOWNLOAD_PATH = os.path.abspath(args.directory)
     else:
         # Get directory from lgog config by default
-        directory = parse_config(CONFIG_PATH, "directory")
+        DOWNLOAD_PATH = parse_config(CONFIG_PATH, "directory")
 
-    download_dir = DownloadDir(directory)
-    download_dir.scan_for_games(library_data)
+    # download_dir = DownloadDir(DOWNLOAD_PATH)
+    # download_dir.scan_for_games(library_data)
+    #
+    # install_dir = InstallDir(INSTALL_PATH)
+    # install_dir.scan_for_games(library_data)
 
-    install_dir = InstallDir(INSTALL_PATH)
-    install_dir.scan_for_games(library_data)
-
-    local_library = LocalLibrary(library_data, download_dir, install_dir)
+    local_library = LocalLibrary(library_data, DOWNLOAD_PATH, INSTALL_PATH)
 
     if args.install:
         install_queue = args.install

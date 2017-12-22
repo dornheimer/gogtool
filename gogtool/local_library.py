@@ -1,6 +1,8 @@
 from collections.abc import Mapping
 import os
 
+from .installation_directory import InstallDir
+from .download_directory import DownloadDir
 from gogtool.game import Game
 from gogtool.helper import user
 from gogtool.helper.log import logger
@@ -10,13 +12,14 @@ class LocalLibrary(Mapping):
     """
     Aggregates all available data and keeps track of every game in the library.
     """
-    def __init__(self, library_data, download_dir, install_dir):
+    def __init__(self, library_data, download_path, install_path):
         self.library_data = library_data
-        self.download_dir = download_dir
-        self.install_dir = install_dir
+        self.download_dir = DownloadDir(self, download_path)
+        self.install_dir = InstallDir(self, install_path)
         self.games = {}
 
         self._add_games()
+        self._scan_directories()
         self._check_for_updates()
 
     def __len__(self):
@@ -39,31 +42,43 @@ class LocalLibrary(Mapping):
         return [game for game in self if game.needs_update]
 
     @property
+    def downloaded_games(self):
+        return [game for game in self if game.downloaded]
+
+    @property
+    def installed_games(self):
+        return [game for game in self if game.installed]
+
+    @property
     def download_queue(self):
         return [game for game in self if game.download]
+
+    def _scan_directories(self):
+        self.download_dir.scan_for_games()
+        self.install_dir.scan_for_games()
+
+        print("{} games in GOG library".format(len(self.library_data)))
+        print("{} downloaded".format(len(self.downloaded_games)))
+        print("{} installed".format(len(self.installed_games)))
 
     def _add_games(self):
         """Populate the library with all games in the user's GOG library.
 
-        Games receive their data from LibraryData. DownloadDir and InstallDir
-        look for the game and update its attributes accordingly.
+        Create a Game object for every entry in the user's GOG library and map
+        it to its name.
         """
         for game_data in self.library_data:
             game = Game(game_data)
-
-            self.download_dir.initialize_game(game)
-            self.install_dir.initialize_game(game)
             self.games[game.name] = game
 
-        print("{} games in GOG library".format(len(self.library_data)))
-        print("{} downloaded".format(len(self.download_dir)))
-        print("{} installed".format(len(self.install_dir)))
-
     def _check_for_updates(self):
-        """Check every downloaded game for available updates."""
+        """Check every downloaded game for available updates.
+
+        Assumes that the version of the installer in the download directory is
+        also the version of the installed game.
+        """
         logger.info("Checking for updates...")
-        for game_name in self.download_dir:
-            game = self[game_name]
+        for game in self.downloaded_games:
             game.check_for_update()
 
         print("\nGames with outdated setup files:")
@@ -74,7 +89,8 @@ class LocalLibrary(Mapping):
         """Update games with outdated setup files.
 
         :param download_all: Download every game, do not ask for confirmation.
-        :param delete_by_default: Do not ask for confirmation before deleting.
+        :param delete_by_default: Do not ask for confirmation before deleting
+            old setup files.
         """
         if not download_all:
             for game in self.games_with_update:
@@ -123,3 +139,21 @@ class LocalLibrary(Mapping):
             dest = os.path.join(self.install_dir.path, game.name, "")
 
         game.install(dest, platform)
+
+    def uninstall_game(self, game):
+        """Uninstall game from install directory.
+
+        Uses uninstaller script if found, or refers to files.txt generated
+        during install. If neither is exists, deletes all files from game
+        directory.
+        """
+        if game.uninstall_script:
+            pass
+            # execute script
+        elif files_list:
+            pass
+            # delete all files in list
+            # move logic to installdir?
+        else:
+            # delete all files
+            install_dir.delete_files(game)

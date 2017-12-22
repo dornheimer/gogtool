@@ -7,11 +7,13 @@ from gogtool.helper.log import logger
 
 
 class DownloadDir(Directory):
-    """
-    Store information about downloaded setup files.
-    """
+    """Identifies and handles games in the local download directory."""
 
-    def scan_for_games(self, game_library):
+    def __init__(self, local_library, path):
+        super().__init__(path)
+        self.local_library = local_library
+
+    def scan_for_games(self):
         """Scan local download directory for games in the library.
 
         Maps game_name to (download_path, setup_files) in self._games.
@@ -21,12 +23,19 @@ class DownloadDir(Directory):
         logger.info("Scanning for downloaded games...")
         dir_contents = os.listdir(self.path)
 
-        for game in game_library:
-            game_name = game.gamename
-            if game_name in dir_contents:
-                download_path = os.path.join(self.path, game_name)
-                setup_files = self._scan_for_setup_files(game_name, download_path)
-                self._games[game_name] = download_path, setup_files
+        for game in self.local_library:
+            if game.name in dir_contents:
+                download_path = os.path.join(self.path, game.name)
+
+                setup_files = self._scan_for_setup_files(game.name, download_path)
+                if not setup_files:  # Empty folder
+                    prompt = (f"Folder for {game} is empty. Download latest installer?")
+                    if user.confirm(prompt):
+                        game.download = True
+                        game.conf = True
+
+                game.download_path = download_path
+                game.download_files = setup_files
 
     def _scan_for_setup_files(self, game_name, download_path):
         """Look for a game's setup files in its download folder.
@@ -42,44 +51,18 @@ class DownloadDir(Directory):
 
         return setup_files
 
-    def initialize_game(self, game):
-        """Pass information of game to its Game object.
-
-        If an empty folder was found, ask if latest installer should be
-            downloaded.
-
-        :param game: A Game object.
-        """
-        if game.name not in self._games:
-            download_path, setup_files = None, None
-        else:
-            download_path, setup_files = self[game.name]
-
-        if setup_files is not None:
-            if not setup_files:  # Empty folder
-                prompt = (f"Folder for {game} is empty. Download latest installer?")
-                if user.confirm(prompt):
-                    game.download = True
-                    game.conf = True
-            else:
-                game.downloaded = True
-
-        game.download_path = download_path
-        game.download_files = setup_files
-
     def delete_files(self, game):
         """Delete all files of specified game.
 
         :param game: A Game object.
         """
         print(f"Deleting files for {game.name}...")
-        download_path, setup_files = self[game.name]
-
         files = []
-        for file_name in setup_files:
-            file_path = os.path.join(download_path, file_name)
+        for file_name in game.download_files:
+            file_path = os.path.join(game.download_path, file_name)
             files.append(file_path)
         system.rm(files)
+        game.download_files = None
 
     def _guess_prefixes(self, game_name):
         """Guess prefix of the setup file.

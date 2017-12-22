@@ -6,38 +6,33 @@ from gogtool.helper.log import logger
 
 
 class InstallDir(Directory):
-    """
-    Store information about installed GOG games.
-    """
+    """Identifies and handles games in the local installation directory."""
 
-    def scan_for_games(self, game_library):
-        """Scan local installation directory and add game to class dictionary if
-        found.
+    def __init__(self, local_library, path):
+        super().__init__(path)
+        self.local_library = local_library
 
-        Maps game_name to install_path in self._games.
-
-        :param game_library: GOG user library (a LibraryData object)
+    def scan_for_games(self):
+        """Scan local installation directory for games and update their
+        installation path if found.
         """
         logger.info("Scanning for installed games...")
         dir_contents = os.listdir(self.path)
-        for game in game_library:
+        for game in self.local_library:
             install_names = self._guess_title_format(game.title)
 
             for iname in install_names:
                 if iname in dir_contents:
                     logger.debug(f"{iname} found in installation directory")
                     install_path = os.path.join(self.path, iname)
-                    self._games[game.gamename] = install_path
+                    game.install_path = install_path
                     break
 
-    def initialize_game(self, game):
-        """Pass information of game to its Game object.
+    def delete_files(game):
+        pass
 
-        :param game: A Game object.
-        """
-        if game.name in self._games:
-            game.installed = True
-            game.install_path = self[game.name]
+    def has_uninstall_script(game):
+        pass
 
     def _guess_title_format(self, game_title):
         """Guess the name of the installation directory of the game (based on

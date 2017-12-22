@@ -16,15 +16,13 @@ class Game:
         self.game_data = game_data
 
         self.name = None
+        self.title = None
         self.setup_files = {}
         self.installers = {}
         self.dlcs = {}
 
-        self.downloaded = False
         self.download_path = None
         self.download_files = None
-
-        self.installed = False
         self.install_path = None
 
         self.needs_update = False
@@ -33,6 +31,14 @@ class Game:
         self.old_files = []
 
         self._get_game_data()
+
+    @property
+    def downloaded(self):
+        return True if self.download_files else False
+
+    @property
+    def installed(self):
+        return self.install_path is not None
 
     @property
     def available_platforms(self):
@@ -58,8 +64,9 @@ class Game:
 
     def _get_game_data(self):
         self.name = self.game_data.gamename
+        self.title = self.game_data.title
         self.setup_files = self.game_data.setup_files
-        self._get_installers()
+        self.installers = self._get_installers()
         self.dlcs = self.game_data.dlcs
 
     def _get_installers(self, id_prefix='en'):
@@ -69,11 +76,14 @@ class Game:
 
         :param id_prefix: Language prefix of the installer file.
         """
+        installers = {}
         for platform, installers in self.setup_files.items():
             for inst in installers:
                 if inst.file_name.endswith((".exe", ".sh", ".dmg")):
                     self.installers[platform] = inst.file_name
                     break
+
+        return installers
 
     def check_for_update(self):
         """Compare local file versions to those on the server."""
@@ -96,8 +106,7 @@ class Game:
             lgogdownloader.download(self.name, file_id)
         else:
             lgogdownloader.download(self.name, self.platform)
-
-        self.downloaded = True
+            self.download_files = self.setup_files
 
     def update_game(self):
         """Download newer versions of the game's setup files."""
@@ -170,7 +179,6 @@ class Game:
             logger.debug("macOS installer not supported")
             pass
 
-        self.installed = True
         self.install_path = install_dir
         print(f"{self.name} installed successfully.")
 

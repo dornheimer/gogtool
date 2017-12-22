@@ -12,10 +12,14 @@ class LibraryData(Directory):
     """
     def __init__(self, path):
         super().__init__(path)
+        self._games = {}
         self._library_data = {}
 
         self._import_library_data()
         self._initialize_library()
+
+    def __len__(self):
+        return len(self._games)
 
     def __iter__(self):
         return iter(self._games.values())
@@ -29,6 +33,7 @@ class LibraryData(Directory):
         logger.debug(f"imported data from {os.path.basename(self.path)}")
 
     def _initialize_library(self):
+        """Map game_name to GameData object."""
         for game_data in self._library_data["games"]:
             game_name = game_data["gamename"]
             self._games[game_name] = GameData(game_data)
