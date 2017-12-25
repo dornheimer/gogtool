@@ -31,7 +31,6 @@ class LocalLibrary(Mapping):
                 raise KeyError
             except KeyError:
                 logger.debug(f"Could not find '{game_name}' in {type(self).__name__}")
-                return None
         return self.games[game_name]
 
     def __iter__(self):
@@ -57,10 +56,6 @@ class LocalLibrary(Mapping):
         self.download_dir.scan_for_games()
         self.install_dir.scan_for_games()
 
-        print("{} games in GOG library".format(len(self.library_data)))
-        print("{} downloaded".format(len(self.downloaded_games)))
-        print("{} installed".format(len(self.installed_games)))
-
     def _add_games(self):
         """Populate the library with all games in the user's GOG library.
 
@@ -81,9 +76,7 @@ class LocalLibrary(Mapping):
         for game in self.downloaded_games:
             game.check_for_update()
 
-        print("\nGames with outdated setup files:")
-        print("\n".join([g.name for g in self.games_with_update]), "\n")
-        logger.debug("%s games with updates", len(self.games_with_update))
+        self.print_list("outdated")
 
     def update_games(self, download_all=False, delete_by_default=False):
         """Update games with outdated setup files.
@@ -92,6 +85,7 @@ class LocalLibrary(Mapping):
         :param delete_by_default: Do not ask for confirmation before deleting
             old setup files.
         """
+        self.print_info()
         if not download_all:
             for game in self.games_with_update:
                 # Check if user already made a choice
@@ -142,10 +136,55 @@ class LocalLibrary(Mapping):
 
     def uninstall_game(self, game_name):
         """Uninstall game from install directory."""
-        logger.debug(f"Installing {game_name}...")
-        game = self[game_name]
-
-        if game in self.installed_games:
-            game.uninstall()
+        logger.debug(f"Uninstalling {game_name}...")
+        try:
+            game = self[game_name]
+        except KeyError:
+            print(f"{game_name} not found in library. Skipping...")
         else:
-            logger.warning(f"{game_name} is not installed")
+            if game in self.installed_games:
+                game.uninstall()
+            else:
+                logger.warning(f"{game_name} is not installed")
+
+    def download_game(self, game_name):
+        """Download setup files for game."""
+        logger.debug(f"Downloading {game_name}...")
+        try:
+            game = self[game_name]
+        except KeyError:
+            print(f"{game_name} not found in library. Skipping...")
+        else:
+            game.download_setup_files()
+    # @_validate_game
+    # def download_game(self, game):
+    #     game.download_setup_files()
+    #
+    # def _validate_game(func):
+    #     def decorated(game_name):
+    #         try:
+    #             game = self[game_name]
+    #         except KeyError:
+    #             print(f"{game_name} not found in library. Skipping...")
+    #         else:
+    #             return func(game)
+    #     return decorated
+
+    def print_info(self):
+        print("{} games in GOG library".format(len(self.library_data)))
+        print("{} downloaded".format(len(self.downloaded_games)))
+        print("{} installed".format(len(self.installed_games)))
+
+    def print_list(self, category):
+        categories = {"installed": (self.installed_games, "No games installed."),
+                      "downloaded": (self.downloaded_games, "No games downloaded."),
+                      "outdated": (self.games_with_update, "All games are up-to-date.")}
+
+        games, empty_list_str = categories[category]
+        if games:
+            game_names = [str(game) for game in games]
+            desc = f" {category} games "
+            print("\n{:*^40}".format(desc))
+            print("\n".join(game_names))
+        else:
+            print("\n{}".format(empty_list_str))

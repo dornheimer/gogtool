@@ -24,6 +24,7 @@ class Game:
         self.download_path = None
         self.download_files = None
         self.install_path = None
+        self.uninstall_script = None
 
         self.needs_update = False
         self.download = False
@@ -39,6 +40,10 @@ class Game:
     @property
     def installed(self):
         return self.install_path is not None
+
+    @property
+    def has_dlc(self):
+        return self.game_data.dlcs != {}
 
     @property
     def available_platforms(self):
@@ -57,10 +62,6 @@ class Game:
             return 1
         elif 2 in self.available_platforms:
             return 2
-
-    @property
-    def has_dlc(self):
-        return self.game_data.dlcs != {}
 
     def _get_game_data(self):
         self.name = self.game_data.gamename

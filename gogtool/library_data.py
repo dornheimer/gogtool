@@ -91,7 +91,7 @@ class GameData:
         try:
             installer_data = self.game_data["installers"]
         except KeyError:
-            logger.warning(f"no setup files for {self.gamename} found")
+            logger.info(f"no setup files for {self.gamename} found")
             self.is_bonus_content = True
         else:
             for inst in installer_data:

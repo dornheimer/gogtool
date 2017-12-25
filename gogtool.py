@@ -22,7 +22,7 @@ def main(args):
     library_data = LibraryData(DATA_PATH)
 
     # Automatically run update if library_data is outdated
-    if args.update or library_data.is_outdated:
+    if args.refresh or library_data.is_outdated:
         lgogdownloader.update_cache()
 
     if args.directory:
@@ -32,6 +32,13 @@ def main(args):
         DOWNLOAD_PATH = parse_config(CONFIG_PATH, "directory")
 
     local_library = LocalLibrary(library_data, DOWNLOAD_PATH, INSTALL_PATH)
+
+    if args.download:
+        download_queue = args.download
+        logger.info(f"Downloading: {', '.join(download_queue)}")
+        for game_name in download_queue:
+            local_library.download_game(game_name)
+        sys.exit()
 
     if args.install:
         install_queue = args.install
@@ -47,6 +54,23 @@ def main(args):
             local_library.uninstall_game(game_name)
         sys.exit()
 
+    if args.list_downloaded:
+        local_library.print_list("downloaded")
+
+    if args.list_installed:
+        local_library.print_list("installed")
+
+    if args.list_outdated:
+        local_library.print_list("outdated")
+
+    if args.list_all:
+        local_library.print_list("downloaded")
+        local_library.print_list("installed")
+        local_library.print_list("outdated")
+
+    if args.info:
+        local_library.print_info()
+
     if args.clean:
         print("Cleaning outdated setup files...")
         for game in local_library.games_with_update:
@@ -54,11 +78,10 @@ def main(args):
         print("Done.")
         sys.exit()
 
-    download_all = args.all
-    delete_by_default = args.delete
-    local_library.update_games(download_all, delete_by_default)
-
-    print("Done.")
+    if args.update_games:
+        download_all = args.all
+        delete_by_default = args.delete
+        local_library.update_games(download_all, delete_by_default)
 
 
 if __name__ == "__main__":
