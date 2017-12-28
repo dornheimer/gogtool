@@ -76,6 +76,7 @@ class Game:
         Some games have multiple setup files and only one executable installer.
 
         :param id_prefix: Language prefix of the installer file.
+        :return: A dictionary with installers mapped to their platforms.
         """
         installers = {}
         for platform, setup_files in self.setup_files.items():

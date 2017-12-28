@@ -42,6 +42,7 @@ class DownloadDir(Directory):
 
         :param game_name: Name of the game
         :param download_path: Download folder of the game
+        :return: A list of the recognized setup files.
         """
         logger.info("Scanning local directory for setup files...")
         game_files = os.listdir(download_path)
@@ -67,6 +68,7 @@ class DownloadDir(Directory):
     def _guess_prefixes(self, game_name):
         """Guess prefix of the setup file.
 
+        :param game_name: Game name as found in the GOG library data.
         :return: A tuple with prefix strings.
         """
         prefixes = ['gog', 'setup', game_name]

@@ -72,10 +72,7 @@ def main(args):
         local_library.print_info()
 
     if args.clean:
-        print("Cleaning outdated setup files...")
-        for game in local_library.games_with_update:
-            download_dir.delete_files(game)
-        print("Done.")
+        local_library.clean()
         sys.exit()
 
     if args.update_games:

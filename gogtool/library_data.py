@@ -33,7 +33,11 @@ class LibraryData(Directory):
         logger.debug(f"imported data from {os.path.basename(self.path)}")
 
     def _initialize_library(self):
-        """Map game_name to GameData object."""
+        """Map game_name to GameData object.
+
+        Note:
+            Created GameData objects.
+        """
         for game_data in self._library_data["games"]:
             game_name = game_data["gamename"]
             self._games[game_name] = GameData(game_data)
@@ -44,7 +48,10 @@ class LibraryData(Directory):
 
     @property
     def is_outdated(self):
-        """Check if game details file is older than two days."""
+        """Check if game details file is older than two days.
+
+        :return: True if game is outdated.
+        """
         logger.info("Checking games data creation date...")
         date = self._library_data["date"]
         creation_date = datetime.strptime(date, "%Y%m%dT%H%M%S")

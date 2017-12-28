@@ -148,7 +148,10 @@ class LocalLibrary(Mapping):
                 logger.warning(f"{game_name} is not installed")
 
     def download_game(self, game_name):
-        """Download setup files for game."""
+        """Download setup files for a game.
+
+        :param game_name: Game name as found in the GOG library data.
+        """
         logger.debug(f"Downloading {game_name}...")
         try:
             game = self[game_name]
@@ -171,14 +174,23 @@ class LocalLibrary(Mapping):
     #     return decorated
 
     def print_info(self):
+        """Print summary of local library information."""
         print("{} games in GOG library".format(len(self.library_data)))
         print("{} downloaded".format(len(self.downloaded_games)))
         print("{} installed".format(len(self.installed_games)))
 
     def print_list(self, category):
-        categories = {"installed": (self.installed_games, "No games installed."),
-                      "downloaded": (self.downloaded_games, "No games downloaded."),
-                      "outdated": (self.games_with_update, "All games are up-to-date.")}
+        """Print a list of games in category as column.
+
+        Possible categories are: 'installed', 'downloaded', and 'outdated'
+
+        :param category: List to print
+        """
+        categories = {
+            "installed": (self.installed_games, "No games installed."),
+            "downloaded": (self.downloaded_games, "No games downloaded."),
+            "outdated": (self.games_with_update, "All games are up-to-date.")
+        }
 
         games, empty_list_str = categories[category]
         if games:
@@ -188,3 +200,9 @@ class LocalLibrary(Mapping):
             print("\n".join(game_names))
         else:
             print("\n{}".format(empty_list_str))
+
+    def clean(self):
+        """Delete outdated setup files for all games."""
+        print("Cleaning outdated setup files...")
+        for game in self.games_with_update:
+            self.download_dir.delete_files(game)

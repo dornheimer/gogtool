@@ -48,6 +48,8 @@ class InstallDir(Directory):
     def _guess_title_format(self, game_title):
         """Guess the name of the installation directory of the game (based on
         its title).
+
+        :return: A list of possible names of the installation folder.
         """
         install_names = []
 
