@@ -12,6 +12,7 @@ class Game:
     """
     Data and methods related to a single game in the library.
     """
+
     def __init__(self, game_data):
         self.game_data = game_data
 
@@ -92,8 +93,10 @@ class Game:
         installers_server = self.setup_files[self.platform]
         inst_filenames = [i.file_name for i in installers_server]
 
-        same_files = all([(fn in self.download_files) for fn in inst_filenames])
-        logger.debug(f"{self.name}: downloaded files match server_files ({same_files})")
+        same_files = all([(fn in self.download_files)
+                          for fn in inst_filenames])
+        logger.debug(
+            f"{self.name}: downloaded files match server_files ({same_files})")
         if not same_files:
             self.needs_update = True
             self.old_files = self.download_files
@@ -146,7 +149,8 @@ class Game:
             print(self.installers)
             installer_info = self.installers[platform]
         except KeyError:
-            logger.error(f"{self.name}: No installer for platform '{platform}' found.")
+            logger.error(
+                f"{self.name}: No installer for platform '{platform}' found.")
             sys.exit(2)
 
         installer_file = os.path.basename(installer_info)
@@ -188,7 +192,8 @@ class Game:
     def uninstall(self, safe=True):
         # Execute script if it exists (installed by GOG)
         if self.uninstall_script is not None:
-            script_path = os.path.join(self.install_path, self.uninstall_script)
+            script_path = os.path.join(
+                self.install_path, self.uninstall_script)
             run.command(["sh", script_path])
         # Delete all files in list (installed by gogtool)
         elif self.install_files:

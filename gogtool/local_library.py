@@ -12,6 +12,7 @@ class LocalLibrary(Mapping):
     """
     Aggregates all available data and keeps track of every game in the library.
     """
+
     def __init__(self, library_data, download_path, install_path):
         self.library_data = library_data
         self.download_dir = DownloadDir(self, download_path)
@@ -30,7 +31,8 @@ class LocalLibrary(Mapping):
             try:
                 raise KeyError
             except KeyError:
-                logger.debug(f"Could not find '{game_name}' in {type(self).__name__}")
+                logger.debug(
+                    f"Could not find '{game_name}' in {type(self).__name__}")
         return self.games[game_name]
 
     def __iter__(self):
@@ -109,7 +111,7 @@ class LocalLibrary(Mapping):
         if delete:
             print("Deleting files...")
             for game in self.download_queue:
-                    self.download_dir.delete_files(game)
+                self.download_dir.delete_files(game)
 
     def install_game(self, game_name, platform=4):
         """Install game into installation directory.

@@ -10,6 +10,7 @@ class LibraryData(Directory):
     """
     Library data imported from lgogdownloader's gamedetails.json.
     """
+
     def __init__(self, path):
         super().__init__(path)
         self._games = {}
@@ -69,6 +70,7 @@ class GameData:
     """
     Parsed data from JSON dictionary with methods to recognize setup files.
     """
+
     def __init__(self, game_data):
         self.game_data = game_data
 
@@ -125,13 +127,14 @@ class DLCData(GameData):
     """
     Parsed data from JSON dictionary, inherits from GameData.
     """
+
     def __init__(self, game_data):
-            self.game_data = game_data
+        self.game_data = game_data
 
-            self.gamename = None
-            self.setup_files = {}
+        self.gamename = None
+        self.setup_files = {}
 
-            self._parse_game_data()
+        self._parse_game_data()
 
     def _parse_game_data(self):
         self.gamename = self.game_data["gamename"]
@@ -142,6 +145,7 @@ class Installer:
     """
     Contains all data related to setup files of a game or DLC.
     """
+
     def __init__(self, installer_data):
         self.__dict__ = installer_data
         self.file_name = os.path.basename(self.path)
