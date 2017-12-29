@@ -78,8 +78,6 @@ class LocalLibrary(Mapping):
         for game in self.downloaded_games:
             game.check_for_update()
 
-        self.print_list("outdated")
-
     def update_games(self, download_all=False, delete_by_default=False):
         """Update games with outdated setup files.
 
@@ -198,7 +196,7 @@ class LocalLibrary(Mapping):
         if games:
             game_names = [str(game) for game in games]
             desc = f" {category} games "
-            print("\n{:*^40}".format(desc))
+            print("{:*^40}".format(desc))
             print("\n".join(game_names))
         else:
             print("\n{}".format(empty_list_str))
