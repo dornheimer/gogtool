@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from gogtool.helper.config import parse_config
+from gogtool.helper.config import parse_config, is_int
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 CONFIG_FILE = os.path.join(dir_path, "test_config/valid_config.cfg")
@@ -24,6 +24,10 @@ class TestUserInput(unittest.TestCase):
                          expected_output['limit-rate'])
         self.assertEqual(parse_config(CONFIG_FILE, 'verbose'),
                          expected_output['verbose'])
+
+    def test_is_int(self):
+        self.assertTrue(is_int('1'))
+        self.assertFalse(is_int('a'))
 
 
 if __name__ == '__main__':
