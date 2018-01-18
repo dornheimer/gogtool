@@ -34,10 +34,11 @@ def main(args):
     local_library = LocalLibrary(library_data, DOWNLOAD_PATH, INSTALL_PATH)
 
     if args.download:
+        delete_old = args.delete
         download_queue = args.download
         logger.info(f"Downloading: {', '.join(download_queue)}")
         for game_name in download_queue:
-            local_library.download_game(game_name)
+            local_library.download_game(game_name, delete_old)
         sys.exit()
 
     if args.install:
@@ -79,6 +80,10 @@ def main(args):
         download_all = args.all
         delete_by_default = args.delete
         local_library.update_games(download_all, delete_by_default)
+
+    if local_library.download_queue:
+        for game in local_library.download_queue:
+            local_library.download_game(game.name)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,6 @@
 import os
 
 from .directory import Directory
-from gogtool.helper import user
 from gogtool.helper import system
 from gogtool.helper.log import logger
 
@@ -26,16 +25,9 @@ class DownloadDir(Directory):
         for game in self.local_library:
             if game.name in dir_contents:
                 download_path = os.path.join(self.path, game.name)
-
-                setup_files = self._scan_for_setup_files(game.name, download_path)
-                if not setup_files:  # Empty folder
-                    prompt = (f"Folder for {game} is empty. Download latest installer?")
-                    if user.confirm(prompt):
-                        game.download = True
-                        game.conf = True
-
                 game.download_path = download_path
-                game.download_files = setup_files
+                game.download_files = self._scan_for_setup_files(
+                    game.name, download_path)
 
     def _scan_for_setup_files(self, game_name, download_path):
         """Look for a game's setup files in its download folder.
@@ -44,7 +36,6 @@ class DownloadDir(Directory):
         :param download_path: Download folder of the game
         :return: A list of the recognized setup files.
         """
-        logger.info("Scanning local directory for setup files...")
         game_files = os.listdir(download_path)
         prefixes = self._guess_prefixes(game_name)
         setup_files = [gf for gf in game_files if gf.startswith(prefixes)]
@@ -53,17 +44,16 @@ class DownloadDir(Directory):
         return setup_files
 
     def delete_files(self, game):
-        """Delete all files of specified game.
+        """Delete old files of specified game.
 
         :param game: A Game object.
         """
         print(f"Deleting files for {game.name}...")
-        files = []
-        for file_name in game.download_files:
+        for file_name in game.old_files:
             file_path = os.path.join(game.download_path, file_name)
-            files.append(file_path)
-        system.rm(files)
-        game.download_files = None
+            system.rm(file_path)
+
+        game.old_files = None
 
     def _guess_prefixes(self, game_name):
         """Guess prefix of the setup file.

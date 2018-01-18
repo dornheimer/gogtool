@@ -20,7 +20,8 @@ class LocalLibrary(Mapping):
         self.games = {}
 
         self._add_games()
-        self._scan_directories()
+        self.download_dir.scan_for_games()
+        self.install_dir.scan_for_games()
         self._check_for_updates()
 
     def __len__(self):
@@ -53,10 +54,6 @@ class LocalLibrary(Mapping):
     @property
     def download_queue(self):
         return [game for game in self if game.download]
-
-    def _scan_directories(self):
-        self.download_dir.scan_for_games()
-        self.install_dir.scan_for_games()
 
     def _add_games(self):
         """Populate the library with all games in the user's GOG library.
@@ -147,10 +144,11 @@ class LocalLibrary(Mapping):
             else:
                 logger.warning(f"{game_name} is not installed")
 
-    def download_game(self, game_name):
+    def download_game(self, game_name, delete_old=False):
         """Download setup files for a game.
 
         :param game_name: Game name as found in the GOG library data.
+        :param delete_old: Delete old files after downloading.
         """
         logger.debug(f"Downloading {game_name}...")
         try:
@@ -159,19 +157,9 @@ class LocalLibrary(Mapping):
             print(f"{game_name} not found in library. Skipping...")
         else:
             game.download_setup_files()
-    # @_validate_game
-    # def download_game(self, game):
-    #     game.download_setup_files()
-    #
-    # def _validate_game(func):
-    #     def decorated(game_name):
-    #         try:
-    #             game = self[game_name]
-    #         except KeyError:
-    #             print(f"{game_name} not found in library. Skipping...")
-    #         else:
-    #             return func(game)
-    #     return decorated
+
+        if delete_old:
+            self.download_dir.delete_files(game)
 
     def print_info(self):
         """Print summary of local library information."""

@@ -36,7 +36,7 @@ class Game:
 
     @property
     def downloaded(self):
-        return True if self.download_files else False
+        return self.download_files is not None
 
     @property
     def installed(self):
@@ -90,16 +90,21 @@ class Game:
 
     def check_for_update(self):
         """Compare local file versions to those on the server."""
-        installers_server = self.setup_files[self.platform]
-        inst_filenames = [i.file_name for i in installers_server]
+        if not self.download_files:  # Empty folder
+            prompt = (f"Folder for {self} is empty. Download latest installer?")
+            if user.confirm(prompt):
+                self.download = True
+                self.conf = True
+        else:
+            installers_server = self.setup_files[self.platform]
+            inst_filenames = [i.file_name for i in installers_server]
 
-        same_files = all([(fn in self.download_files)
-                          for fn in inst_filenames])
-        logger.debug(
-            f"{self.name}: downloaded files match server_files ({same_files})")
-        if not same_files:
-            self.needs_update = True
-            self.old_files = self.download_files
+            new_files = list(set(inst_filenames) - set(self.download_files))
+            self.needs_update = len(new_files) > 0
+            self.old_files = list(set(self.download_files) - set(inst_filenames))
+
+            logger.debug("{}: downloaded files match server_files ({})".format(
+                self, (not self.needs_update)))
 
     def download_setup_files(self, file_id=None):
         """Download setup files for game.
