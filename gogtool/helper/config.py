@@ -24,6 +24,7 @@ def parse_config(path, key=None):
     for key, value in config_dict.items():
         if is_int(value):
             config_dict[key] = int(value)
+            continue
         config_dict[key] = bool_dict.get(value, value)
 
     logger.debug("Succesfully parsed config file")
