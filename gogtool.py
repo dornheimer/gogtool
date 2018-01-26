@@ -77,7 +77,7 @@ def main(args):
         sys.exit()
 
     if args.update_games:
-        download_all = args.all
+        download_all = args.download_all
         delete_by_default = args.delete
         local_library.update_games(download_all, delete_by_default)
 
