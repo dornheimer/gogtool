@@ -1,4 +1,5 @@
 import os
+import itertools
 
 from .directory import Directory
 from gogtool.helper import system
@@ -24,24 +25,36 @@ class DownloadDir(Directory):
 
         for game in self.local_library:
             if game.name in dir_contents:
-                download_path = os.path.join(self.path, game.name)
-                game.download_path = download_path
-                game.download_files = self._scan_for_setup_files(
-                    game.name, download_path)
+                self._scan_for_setup_files(game)
 
-    def _scan_for_setup_files(self, game_name, download_path):
+    def _scan_for_setup_files(self, game):
         """Look for a game's setup files in its download folder.
 
-        :param game_name: Name of the game
+        :param game: A Game object.
         :param download_path: Download folder of the game
         :return: A list of the recognized setup files.
         """
-        game_files = os.listdir(download_path)
-        prefixes = self._guess_prefixes(game_name)
-        setup_files = [gf for gf in game_files if gf.startswith(prefixes)]
-        logger.debug(f"{len(setup_files)} file(s) for {game_name} found")
+        download_path = os.path.join(self.path, game.name)
+        local_files = os.listdir(download_path)
+        server_files = itertools.chain.from_iterable(game.setup_files.values())
+        server_files = [str(file_) for file_ in server_files]
+        prefixes = self._guess_prefixes(game.name)
 
-        return setup_files
+        for lf in local_files:
+            if lf in server_files:
+                game.current_files.add(lf)
+            if lf.startswith(prefixes) and lf not in server_files:
+                game.old_files.add(lf)
+
+        game.download_path = download_path
+        game.downloaded = True
+        if game.current_files or game.old_files:
+            logger.debug(f"Setup file(s) for {game.name} found")
+        else:
+            logger.debug(f"Empty folder for {game.name} found")
+
+    def is_empty_folder(self, game):
+        return not game.current_files | game.old_files
 
     def delete_files(self, game):
         """Delete old files of specified game.
@@ -73,3 +86,20 @@ class DownloadDir(Directory):
                 break
 
         return tuple(prefixes)
+
+    def check_outdated(self, game, include_empty=False):
+        if not include_empty:
+            if not self.is_empty_folder(game):
+                outdated = not game.current_files
+                if outdated:
+                    logger.debug("{} needs update: {}".format(
+                        game.name, outdated))
+            else:
+                outdated = False
+        else:
+            outdated = not game.current_files
+            if outdated:
+                logger.debug("{} needs update: {}".format(
+                    game.name, outdated))
+
+        return outdated

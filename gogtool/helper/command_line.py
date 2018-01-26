@@ -47,5 +47,7 @@ def parse_command_line():
                         help="delete old setup files if an up-to-date version is present")
     parser.add_argument("--info", action="store_true",
                         help="print general library information")
+    parser.add_argument("--include-empty", action="store_true",
+                        help="print general library information")
 
     return parser.parse_args()

@@ -31,7 +31,7 @@ def main(args):
         # Get directory from lgog config by default
         DOWNLOAD_PATH = parse_config(CONFIG_PATH, "directory")
 
-    local_library = LocalLibrary(library_data, DOWNLOAD_PATH, INSTALL_PATH)
+    local_library = LocalLibrary(library_data, DOWNLOAD_PATH, INSTALL_PATH, args.include_empty)
 
     if args.download:
         delete_old = args.delete

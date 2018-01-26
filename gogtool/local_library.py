@@ -13,8 +13,9 @@ class LocalLibrary(Mapping):
     Aggregates all available data and keeps track of every game in the library.
     """
 
-    def __init__(self, library_data, download_path, install_path):
+    def __init__(self, library_data, download_path, install_path, include_empty):
         self.library_data = library_data
+        self.include_empty = include_empty
         self.download_dir = DownloadDir(self, download_path)
         self.install_dir = InstallDir(self, install_path)
         self.games = {}
@@ -73,7 +74,15 @@ class LocalLibrary(Mapping):
         """
         logger.info("Checking for updates...")
         for game in self.downloaded_games:
-            game.check_for_update()
+            game.needs_update = self.download_dir.check_outdated(game, self.include_empty)
+
+            if self.include_empty and self.download_dir.is_empty_folder(game):
+                prompt = (f"Folder for {game} is empty. Download latest installer?")
+                if user.confirm(prompt):
+                    game.download = True
+                    game.conf = True
+
+        self.print_list('outdated')
 
     def update_games(self, download_all=False, delete_by_default=False):
         """Update games with outdated setup files.
