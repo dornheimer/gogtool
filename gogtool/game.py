@@ -99,9 +99,7 @@ class Game:
 
     def update(self):
         """Download newer versions of the game's setup files."""
-        logger.debug(f"{self.name}.update == {self.needs_update}")
-        if not self.download:
-            return
+        logger.debug(f"Downloading new files for {self.name}")
         # Delete old files
         for file_ in self.old_files:
             file_path = os.path.join(self.download_path, file_)
@@ -130,7 +128,6 @@ class Game:
             self.download_setup_files()
 
         try:
-            print(self.installers)
             installer_info = self.installers[platform]
         except KeyError:
             logger.error(
