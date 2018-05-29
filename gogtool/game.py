@@ -1,191 +1,250 @@
+import logging
 import os
-import sys
+import re
+from functools import partial
 
-import gogtool.helper.lgogdownloader as lgogdownloader
-from gogtool.helper import user
-from gogtool.helper import run
-from gogtool.helper import system
-from gogtool.helper.log import logger
+from gogtool import lgog, util
+
+logger = logging.getLogger(__name__)
 
 
 class Game:
-    """
-    Data and methods related to a single game in the library.
-    """
-
-    def __init__(self, game_data):
-        self.game_data = game_data
-
-        self.name = None
-        self.title = None
-        self.setup_files = {}
-        self.installers = {}
-        self.dlcs = {}
-
-        self.download_path = None
-        self.current_files = set()
-        self.old_files = set()
-        self.install_path = None
-        self.uninstall_script = None
-
-        self.downloaded = False
+    def __init__(self, game_data, *, download_dir=None, install_dir=None):
+        self._data = game_data
+        self.name = game_data['gamename']
+        self.installers = game_data['installers']
+        self.linux_available = self.check_linux()
+        self.server_files = self.get_server_files()
+        self.downloaded_files = set()
         self.needs_update = False
-        self.download = False
-        self.conf = False
+        self.download_dir = download_dir
+        self.install_dir = install_dir
+        self.dlc_installed = False
 
-        self._get_game_data()
-
-    @property
-    def installed(self):
-        return self.install_path is not None
-
-    @property
-    def has_dlc(self):
-        return self.game_data.dlcs != {}
-
-    @property
-    def available_platforms(self):
-        return list(self.game_data.setup_files)
-
-    @property
-    def platform(self):
-        """Set platform to linux if available.
-
-        Note:
-            1 = Windows, 2 = MacOS, 4 = Linux
-        """
-        if 4 in self.available_platforms:
-            return 4
-        elif 1 in self.available_platforms:
-            return 1
-        elif 2 in self.available_platforms:
-            return 2
-
-    def _get_game_data(self):
-        self.name = self.game_data.gamename
-        self.title = self.game_data.title
-        self.setup_files = self.game_data.setup_files
-        self.installers = self._get_installers()
-        self.dlcs = self.game_data.dlcs
-
-    def _get_installers(self, id_prefix='en'):
-        """Get executable installer files from setup files data.
-
-        Some games have multiple setup files and only one executable installer.
-
-        :param id_prefix: Language prefix of the installer file.
-        :return: A dictionary with installers mapped to their platforms.
-        """
-        installers = {}
-        for platform, setup_files in self.setup_files.items():
-            for sf in setup_files:
-                if sf.file_name.endswith((".exe", ".sh", ".dmg")):
-                    installers[platform] = sf.file_name
-                    break
-
-        return installers
-
-    def download_setup_files(self, file_id=None):
-        """Download setup files for game.
-
-        :param file_id: Optionally download file by ID instead.
-        """
-        # If file is already downloaded, lgogdownloader will skip
-        if file_id is not None:
-            lgogdownloader.download(self.name, file_id)
-        else:
-            lgogdownloader.download(self.name, self.platform)
-            self.download_files = self.setup_files
-
-    def update(self):
-        """Download newer versions of the game's setup files."""
-        logger.debug(f"Downloading new files for {self.name}")
-        # Delete old files
-        for file_ in self.old_files:
-            file_path = os.path.join(self.download_path, file_)
-            system.rm(file_path)
-        self.download_setup_files()
-
-    def install(self, install_dir, platform):
-        """Install the game.
-
-        Extract installer files into a temporary directory and move the files
-        to the destination.
-
-        :param install_dir: Destination directory
-        :param platform: The integer value associated with an OS (1, 2, or 4)
-        """
-        confirmation = user.confirm(f"Install {self.name}?")
-        if not confirmation:
-            print("Installation canceled.")
-            sys.exit()
-
-        # Check for local files first and download latest installer if either
-        # outdated or nonexistent
-        if self.downloaded and self.needs_update:
-            self.update()
-        elif not self.downloaded:
-            self.download_setup_files()
-
-        try:
-            installer_info = self.installers[platform]
-        except KeyError:
-            logger.error(
-                f"{self.name}: No installer for platform '{platform}' found.")
-            sys.exit(2)
-
-        installer_file = os.path.basename(installer_info)
-        installer = os.path.join(self.download_path, installer_file)
-
-        # Create temp dir inside install_dir
-        temp_dir = os.path.join(install_dir, "tmp/")
-        system.mkdir(temp_dir)
-
-        if platform == 4:
-            # Extract game files
-            extract = ["unzip", installer, "-d", temp_dir, "data/noarch/*"]
-            run.command(extract)
-
-            # Move files from temp_dir to destination
-            game_files = os.path.join(temp_dir, "data/noarch/")
-            logger.debug(f"Moving files from {game_files} to {install_dir}")
-            system.update_dir(game_files, install_dir)
-
-            # Remove temp_dir
-            system.rmdir(temp_dir)
-
-            # Save list of file names to text file
-            text_file = os.path.join(install_dir, "files.txt")
-            list_files = ["unzip", "-Z", "-1", installer, ">>", text_file]
-            run.command(list_files, shell=True)
-
-        elif platform == 1:
-            logger.debug(f"Installing {self.name}. Platform = {platform}")
-            pass
-            # TODO: use innoexctract
-        elif platform == 2:
-            logger.debug("macOS installer not supported")
-            pass
-
-        self.install_path = install_dir
-        print(f"{self.name} installed successfully.")
-
-    def uninstall(self, safe=True):
-        # Execute script if it exists (installed by GOG)
-        if self.uninstall_script is not None:
-            script_path = os.path.join(
-                self.install_path, self.uninstall_script)
-            run.command(["sh", script_path])
-        # Delete all files in list (installed by gogtool)
-        elif self.install_files:
-            for file_path in self.install_files:
-                system.rm(file_path)
-        # Remove all files for game only if safe uninstall is disabled
-        elif not safe:
-            system.rmdir(self.path)
+        self.installable_dlcs = self.get_installable_dlcs()
+        self.has_dlc = len(self.installable_dlcs) >= 1
 
     def __str__(self):
         return self.name
 
     def __repr__(self):
-        return f"{type(self).__name__}({self.name!r}, GAME INFO, {self.download_path!r})"
+        class_name = type(self).__name__
+        return f"{class_name}({self.name})"
+
+    def __setattr__(self, name, value):
+        super().__setattr__(name, value)
+        if name == 'download_dir' and value is not None:
+            self.downloaded_files = self.find_downloaded_files()
+        if name == 'downloaded_files' and value != set():
+            self.needs_update = self.check_file_versions()
+
+    @property
+    def is_downloaded(self):
+        return len(self.downloaded_files) > 0
+
+    @property
+    def is_installed(self):
+        return self.install_dir is not None
+
+    def check_linux(self):
+        for inst in self.installers:
+            if inst['platform'] == 4:
+                return True
+        return False
+
+    def find_downloaded_files(self):
+        installer_re = re.compile(
+            r".*\.(zip|exe|bin|dmg|old|deb|tar\.gz|pkg|sh)$"
+        )
+        try:
+            dir_content = util.listdir(self.download_dir)
+        except (FileNotFoundError, TypeError):
+            logger.debug("%s not downloaded", self.name)
+            return set()
+        else:
+            return {df for df in dir_content if installer_re.search(df)}
+
+    def get_server_files(self):
+        platform = 4 if self.linux_available else 1
+        files = set()
+        for inst in self.installers:
+            if inst['platform'] != platform:
+                continue
+            file_path = inst['path']
+            files.add(file_path)
+        return files
+
+    def check_file_versions(self):
+        current, old = self.match_server_files()
+        return len(current) == 0
+
+    def get_installable_dlcs(self):
+        dlcs = []
+        if 'dlcs' not in self._data:
+            return dlcs
+        for dlc_data in self._data['dlcs']:
+            if 'installers' not in dlc_data:
+                continue
+            dlc_name = dlc_data['gamename']
+            dlc_download_dir = None
+            if self.download_dir:
+                dlc_download_dir = os.path.join(self.download_dir, 'dlc', dlc_name)
+            dlc = DLC(self, dlc_data, download_dir=dlc_download_dir)
+            dlcs.append(dlc)
+        return dlcs
+
+    def match_server_files(self):
+        downloaded_file_names = {
+            os.path.basename(fp) for fp in self.downloaded_files
+            }
+        server_file_names = {os.path.basename(fp) for fp in self.server_files}
+        matched = downloaded_file_names & server_file_names
+        unmatched = downloaded_file_names - server_file_names
+        return (matched, unmatched)
+
+    def match_downloaded(self, basename=False):
+        server_files = self.server_files
+        if basename:
+            server_files = [os.path.basename(sf) for sf in self.server_files]
+        if not self.is_downloaded:
+            # Return all available files on the server
+            return [sf for sf in server_files]
+
+        # Return only files that match downloaded files (by extension)
+        ext_re = re.compile(r"\..+")
+        return_match = lambda string: ext_re.search(string).group(0)
+        downloaded_ext = {return_match(df) for df in self.downloaded_files}
+        return [sf for sf in server_files if return_match(sf) in downloaded_ext]
+
+    def download(self):
+        if self.is_downloaded and not self.needs_update:
+            print("Game files are up-to-date.")
+        elif self.is_downloaded and self.needs_update:
+            delete_old = util.user_confirm("Delete old setup files?")
+            if delete_old:
+                self.delete_setup_files()
+            lgog.download(self.name, self.download_dir)
+        else:
+            lgog.download(self.name, self.download_dir)
+        # Update downloaded files
+        self.downloaded_files = self.find_downloaded_files()
+        self.needs_update = self.check_file_versions()
+
+    def install(self):
+        if not self.linux_available:
+            print("Linux version not available. WINE support not implemented.")
+            return
+        if self.is_installed and not self.needs_update:
+            print(f"Latest version of '{self.name}' is already installed.")
+            return
+        elif self.is_installed and self.needs_update:
+            user_prompt = f"Installation of '{self.name}' is outdated. Update?"
+            update = util.user_confirm(user_prompt)
+            if update:
+                self.download(self.name)
+                self.install(self.name)
+            else:
+                return
+        elif not self.is_downloaded:
+            self.download(self.name)
+
+        installer = self.installer_files.pop()
+        installer_path = os.path.join(self.download_dir, installer)
+        self.install_dir = os.path.join(self.install_dir, self.name)
+        util.extract_linux_installer(installer_path, self.install_dir)
+
+        if self.has_dlc:
+            for dlc in self.installable_dlcs:
+                installer_path = os.path.join(dlc.download_dir, dlc.installer_files)
+                util.extract_linux_installer(installer_path, self.install_dir)
+            self.dlc_installed = True
+
+    def update(self):
+        logger.warning("Update not implemented")
+        print("Update not implemented")
+
+    def uninstall(self):
+        if not self.is_installed:
+            log_msg = f"'{self.name}' is not installed."
+            logger.error(log_msg)
+            print(log_msg)
+            return
+        try:
+            # Only delete files and directories in the file list
+            self.uninstall_from_list()
+        except FileNotFoundError:
+            logger.warning("File list not found")
+            user_prompt = "No list of installed files found. Remove entire game folder?"
+            if util.user_confirm(user_prompt):
+                util.rmdir(self.install_dir)
+
+        if util.user_confirm("Delete setup files?"):
+            self.delete_setup_files()
+
+    def uninstall_from_list(self):
+        logger.debug("Reading file list")
+        file_list = os.path.join(self.install_dir, 'files.txt')
+        with open(file_list) as f:
+            fformat = partial(Game.format_file_path, self.install_dir)
+            installed_files = {fformat(fp) for fp in f.readlines()}
+
+        dir_content = util.listdir(self.install_dir)
+        for item in dir_content:
+            if item not in installed_files:
+                continue
+            if os.path.isfile(item):
+                util.rm(item)
+            elif os.path.isdir(item):
+                util.rmdir(item)
+        util.rm(file_list)
+
+        dir_content = util.listdir(self.install_dir)
+        if not dir_content:
+            util.rmdir(self.install_dir)
+
+    def delete_setup_files(self):
+        if not self.is_downloaded:
+            log_msg = f"No downloaded files for '{self.name}' found."
+            logger.error(log_msg)
+            print(log_msg)
+            return
+        util.rm_all(self.downloaded_files)
+        # Update downloaded files
+        self.downloaded_files = self.find_downloaded_files()
+
+    def remove(self):
+        if self.is_installed:
+            self.uninstall()
+        if self.is_downloaded:
+            self.delete_setup_files()
+
+    def view_install_dir(self):
+        if not self.is_installed:
+            log_msg = f"'{self.name}' is not installed."
+            logger.error(log_msg)
+            print(log_msg)
+            return
+        util.open_dir(self.install_dir)
+
+    @staticmethod
+    def format_file_path(game_install_dir, filename):
+        file_ = filename.strip().replace('data/noarch/', '')
+        file_path = os.path.join(game_install_dir, file_)
+        return os.path.normpath(file_path)
+
+
+class DLC(Game):
+    def __init__(self, base_game, dlc_data, download_dir):
+        super().__init__(dlc_data, download_dir=download_dir)
+        self.base_game = base_game
+
+        if self.base_game.is_installed:
+            self.install_dir = base_game.install_dir
+
+    @property
+    def is_installed(self):
+        return self.base_game.dlc_installed
+
+
+class Patch(DLC):
+    pass
