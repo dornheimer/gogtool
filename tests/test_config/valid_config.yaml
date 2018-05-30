@@ -1,0 +1,2 @@
+{download_dir: test_config/download_dir, install_dir: test_config/install_dir, lgog_config_path: /home/iiu/python/gogtool/tests/test_config/lgog_testconfig.cfg,
+  lgog_data_path: test/gamedetails.json}
