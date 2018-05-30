@@ -4,7 +4,7 @@ import os
 
 import yaml
 
-USER_CONFIG_PATH = os.path.expanduser('~/.gogtool.yaml')
+DEFAULT_USER_CONFIG_PATH = os.path.expanduser('~/.gogtool.yaml')
 
 DEFAULT_CONFIG = {
     'install_dir': '~/GOG Games',
@@ -24,12 +24,12 @@ def convert_bool(bool_string):
         return bool_string
 
 
-def load_user_config(config_file):
+def load_user_config(config_file=None):
     env_config = os.getenv('GOGTOOL_CONFIG', None)
     if env_config is not None:
         logger.debug("GOGTOOL_CONFIG is set")
         config_file = os.path.expanduser(env_config)
-    if not os.path.exists(config_file):
+    if config_file is None or not os.path.exists(config_file):
         return {}
     with open(config_file) as f:
         logger.debug("Loading user config: %s", config_file)
@@ -51,8 +51,10 @@ def update_config(original, new):
     return config
 
 
-def configure_gogtool():
-    user_config = load_user_config(USER_CONFIG_PATH)
+def configure_gogtool(config_file=None):
+    if config_file is None:
+        config_file = DEFAULT_USER_CONFIG_PATH
+    user_config = load_user_config(config_file)
     if user_config:
         config = update_config(DEFAULT_CONFIG, user_config)
     else:
