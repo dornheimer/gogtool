@@ -172,6 +172,11 @@ class Library:
         logger.info("Open %s", game.install_dir)
         game.view_install_dir()
 
+    def run(self, game_name):
+        game = self.get_game(game_name)
+        logger.info("Launching %s", game_name)
+        game.run()
+
     def check_orphaned(self):
         orphans = []
         for game in self.downloaded_games:

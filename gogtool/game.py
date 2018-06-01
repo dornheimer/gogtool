@@ -234,6 +234,16 @@ class Game:
             return
         util.open_dir(self.install_dir)
 
+    def run(self):
+        if not self.is_installed:
+            log_msg = f"'{self.name}' is not installed."
+            logger.error(log_msg)
+            print(log_msg)
+            return
+        if self.linux_available:
+            start_script = os.path.join(self.install_dir, 'start.sh')
+            util.run_command([start_script], silent=True)
+
     @staticmethod
     def format_file_path(game_install_dir, filename):
         file_ = filename.strip().replace('data/noarch/', '')

@@ -39,6 +39,7 @@ def parse_commandline():
         const='debug',
         default='warning'
     )
+    parser.add_argument('--launch')
 
     return parser.parse_args()
 
@@ -124,6 +125,9 @@ def main(args):
     if args.edit_lgogconfig:
         config_path = config['lgog_config_path']
         util.run_command(['xdg-open', config_path])
+
+    if args.launch:
+        library.run(game_name=args.launch)
 
 
 if __name__ == '__main__':
