@@ -116,21 +116,24 @@ class Game:
         downloaded_ext = {return_match(df) for df in self.downloaded_files}
         return [sf for sf in server_files if return_match(sf) in downloaded_ext]
 
-    def download(self):
+    def download(self, download_dir):
         if self.is_downloaded and not self.needs_update:
             print("Game files are up-to-date.")
+            return
         elif self.is_downloaded and self.needs_update:
             delete_old = util.user_confirm("Delete old setup files?")
             if delete_old:
                 self.delete_setup_files()
-            lgog.download(self.name, self.download_dir)
+            lgog.download(game_name=self.name, dest=download_dir)
         else:
-            lgog.download(self.name, self.download_dir)
+            lgog.download(game_name=self.name, dest=download_dir)
+
         # Update downloaded files
+        self.download_dir = os.path.join(download_dir, self.name)
         self.downloaded_files = self.find_downloaded_files()
         self.needs_update = self.check_file_versions()
 
-    def install(self):
+    def install(self, install_dir, download_dir):
         if not self.linux_available:
             print("Linux version not available. WINE support not implemented.")
             return
@@ -141,23 +144,28 @@ class Game:
             user_prompt = f"Installation of '{self.name}' is outdated. Update?"
             update = util.user_confirm(user_prompt)
             if update:
-                self.download(self.name)
-                self.install(self.name)
+                self.download(download_dir)
+                self.install(install_dir)
             else:
                 return
         elif not self.is_downloaded:
-            self.download(self.name)
+            self.download(download_dir)
 
-        installer = self.installer_files.pop()
+        installer = os.path.basename(self.server_files.pop())
         installer_path = os.path.join(self.download_dir, installer)
-        self.install_dir = os.path.join(self.install_dir, self.name)
+        self.install_dir = os.path.join(install_dir, self.name)
         util.extract_linux_installer(installer_path, self.install_dir)
 
         if self.has_dlc:
-            for dlc in self.installable_dlcs:
-                installer_path = os.path.join(dlc.download_dir, dlc.installer_files)
-                util.extract_linux_installer(installer_path, self.install_dir)
-            self.dlc_installed = True
+            self.install_dlc()
+
+    def install_dlc(self):
+        for dlc in self.installable_dlcs:
+            if not dlc.is_downloaded:
+                continue
+            installer_path = os.path.join(dlc.download_dir, dlc.server_files)
+            util.extract_linux_installer(installer_path, self.install_dir)
+        self.dlc_installed = True
 
     def update(self):
         logger.warning("Update not implemented")

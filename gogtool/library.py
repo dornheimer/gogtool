@@ -93,6 +93,8 @@ class Library:
         dlc_subdir_fmt = self.config['lgogdownloader']['subdir-dlc']
         dlc_subdir, dlc_id = dlc_subdir_fmt.split('/')
         dlc_dir = os.path.join(game.download_dir, dlc_subdir)
+        if not os.path.exists(dlc_dir):
+            return
         for x in os.listdir(dlc_dir):
             if dlc_id == '%dlcname%':
                 if x not in game.installable_dlcs:
@@ -140,12 +142,12 @@ class Library:
     def download(self, game_name):
         logger.info("Downloading %s", game_name)
         game = self.get_game(game_name)
-        game.download()
+        game.download(self.download_dir)
 
     def install(self, game_name):
         logger.info("Installing %s", game_name)
         game = self.get_game(game_name)
-        game.install()
+        game.install(self.install_dir, self.download_dir)
 
     def update(self, game_name):
         game = self.get_game(game_name)

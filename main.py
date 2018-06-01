@@ -58,20 +58,19 @@ def main(args):
     gog_library = load_json(config['lgog_data_path'])
 
     if Library.is_outdated(gog_library) or args.refresh:
-        print("Library data is outdated. Updating...")
+        print("Updating library data...")
         lgog.run('--update-cache')
         gog_library = load_json(config['lgog_data_path'])
 
     library = Library(gog_library, config)
 
     if args.download:
-        dest = config['download_dir']
         if len(args.download) == 1:
             game_name = args.download[0]
-            lgog.download(game_name, dest)
+            library.download(game_name)
         else:
             for game_name in args.download:
-                lgog.download(game_name, dest)
+                library.download(game_name)
 
     if args.install:
         if len(args.install) == 1:
