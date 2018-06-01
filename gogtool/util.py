@@ -45,27 +45,32 @@ def update_dir(src, dest):
         for file_ in files:
             src_file = os.path.join(src_dir, file_)
             dest_file = os.path.join(dest_dir, file_)
-            if os.path.exists(dest_file):  # Remove file if it exists
+            if os.path.exists(dest_file):
                 rm(dest_file)
             move(src_file, dest_dir)
 
 
-def run_command(args, shell=False):
-    logger.info("Running %s", " ".join(args))
+def run_command(args, shell=False, silent=False, ignore_errors=False):
+    logger.debug("Running %s", " ".join(args))
+    stderr_target = subprocess.DEVNULL if ignore_errors else None
+    stdout_target = subprocess.DEVNULL if silent else None
+
     if shell:
         # Escape spaces if arg is a path
         shell_args = " ".join([arg.replace(" ", "\ ") for arg in args])
-        process = subprocess.Popen(shell_args, shell=True)
+        process = subprocess.Popen(
+            shell_args,
+            shell=True,
+            stderr=stderr_target
+        )
         return
-    else:
-        process = subprocess.Popen(args, stdout=subprocess.PIPE)
 
-    while True:
-        output = process.stdout.readline()
-        rc = process.poll()
-        if output == b'' and rc is not None:
-            break
-        logger.debug(output.decode('utf-8').strip())
+    process = subprocess.Popen(
+        args,
+        stdout=stdout_target,
+        stderr=stderr_target
+    )
+    rc = process.wait()
     return rc
 
 
@@ -105,8 +110,15 @@ def extract_linux_installer(installer, dest):
     # Extract files into temp dir
     mkdir(dest)
     temp_dir = tempfile.mkdtemp(dir=dest)
-    extract_command = ["unzip", installer, "-d", temp_dir, "data/noarch/*"]
-    run_command(extract_command)
+    extract_command = [
+        "unzip",
+        "-qq",              # quieter mode
+        installer,
+        "-d",               # destination
+        temp_dir,
+        "data/noarch/*"     # only extract files from this subdir
+    ]
+    run_command(extract_command, ignore_errors=True)
 
     # Move files from temp dir to game folder
     game_files_dir = os.path.join(temp_dir, "data/noarch")
@@ -114,9 +126,15 @@ def extract_linux_installer(installer, dest):
 
     rmdir(temp_dir)
 
-    # Save list of file names to text file
+    # Save list of file names to text file (for uninstalling)
     text_file = os.path.join(dest, "files.txt")
     list_files_command = [
-        "unzip", "-Z", "-1", installer, "data/noarch/*", ">>", text_file
+        "unzip",
+        "-Z",               # zip info mode
+        "-1",               # listing format: filenames only
+        installer,
+        "data/noarch/*",
+        ">>",
+        text_file
     ]
-    run_command(list_files_command, shell=True)
+    run_command(list_files_command, shell=True, ignore_errors=True)
