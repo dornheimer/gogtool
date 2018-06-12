@@ -12,7 +12,10 @@ from gogtool.log import configure_logger
 from gogtool.main import run_gogtool
 
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(
+    prog='gogtool',
+    description="a small extension for lgogdownloader",
+)
 
 parser.add_argument(
     '--list',
@@ -23,7 +26,11 @@ parser.add_argument(
     '--platform',
     choices=['l', 'w'],
     default='l',
-    help="set platform"
+    help="""
+        set platform
+        valid options are: l (linux), w (windows)
+        """,
+    metavar="",
 )
 parser.add_argument(
     '--show-files',
@@ -33,7 +40,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--update',
-    metavar='<gamename>',
+    metavar='<game>',
     help="download and install newest version of game(s)"
 )
 parser.add_argument(
@@ -44,25 +51,25 @@ parser.add_argument(
 parser.add_argument(
     '--download',
     nargs='+',
-    metavar='<gamename>',
+    metavar='<game>',
     help="download game(s)"
 )
 parser.add_argument(
     '--install',
     nargs='+',
-    metavar='<gamename>',
+    metavar='<game>',
     help="install game(s). if necessary, downloads setup files."
 )
 parser.add_argument(
     '--uninstall',
     nargs='+',
-    metavar='<gamename>',
+    metavar='<game>',
     help="uninstall game(s)"
 )
 parser.add_argument(
     '--remove',
     nargs='+',
-    metavar='<gamename>',
+    metavar='<game>',
     help="delete setupfile for game(s)"
 )
 parser.add_argument(
@@ -75,7 +82,11 @@ parser.add_argument(
     action='store_true',
     help="update lgogdownloader's library cache"
 )
-parser.add_argument('--view', help="browse install directory of a game")
+parser.add_argument(
+    '--view',
+    help="browse install directory of a game",
+    metavar='<game>'
+)
 parser.add_argument(
     '--edit-lgogconfig',
     action='store_true',
@@ -87,11 +98,15 @@ parser.add_argument(
     nargs='?',
     const='debug',
     default='warning',
-    help='show debug information'
+    help="""
+        show debug information.
+        valid options are: info, debug, warning, critical, error, notset
+        """,
+    metavar="",
 )
 parser.add_argument(
     '--launch',
-    metavar='<gamename>',
+    metavar='<game>',
     help="start a game"
 )
 
