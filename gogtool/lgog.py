@@ -10,6 +10,6 @@ def run(command_string):
     run_command(['lgogdownloader'] + command_args)
 
 
-def download(game_name, dest):
+def download(game_name, dest, platform='l'):
     print(f"Downloading {game_name}...")
-    run(f"--download --directory {dest} --game {game_name }")
+    run(f"--download --directory {dest} --platform {platform} --game {game_name }")

@@ -117,6 +117,7 @@ class Game:
         return [sf for sf in server_files if return_match(sf) in downloaded_ext]
 
     def download(self, download_dir):
+        platform = 'l' if self.linux_available else 'w'
         if self.is_downloaded and not self.needs_update:
             print("Game files are up-to-date.")
             return
@@ -124,9 +125,8 @@ class Game:
             delete_old = util.user_confirm("Delete old setup files?")
             if delete_old:
                 self.delete_setup_files()
-            lgog.download(game_name=self.name, dest=download_dir)
-        else:
-            lgog.download(game_name=self.name, dest=download_dir)
+
+        lgog.download(self.name, dest=download_dir, platform=platform)
 
         # Update downloaded files
         self.download_dir = os.path.join(download_dir, self.name)
