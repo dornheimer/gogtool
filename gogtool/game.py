@@ -163,7 +163,8 @@ class Game:
         for dlc in self.installable_dlcs:
             if not dlc.is_downloaded:
                 continue
-            installer_path = os.path.join(dlc.download_dir, dlc.server_files)
+            installer = os.path.basename(dlc.server_files.pop())
+            installer_path = os.path.join(dlc.download_dir, installer)
             util.extract_linux_installer(installer_path, self.install_dir)
         self.dlc_installed = True
 
