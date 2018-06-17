@@ -131,10 +131,11 @@ def main():
     config = configure_gogtool()
     gog_library = load_json(config['lgog_data_path'])
 
-    if Library.is_outdated(gog_library) or args.refresh:
-        print("Updating library data...")
-        lgog.run('--update-cache')
-        gog_library = load_json(config['lgog_data_path'])
+    if not any([args.download, args.launch, args.edit_lgogconfig, args.view]):
+        if Library.is_outdated(gog_library) or args.refresh:
+            print("Updating library data...")
+            lgog.run('--update-cache')
+            gog_library = load_json(config['lgog_data_path'])
 
     library = Library(gog_library, config)
 
