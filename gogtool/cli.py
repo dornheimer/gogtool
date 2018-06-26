@@ -1,15 +1,9 @@
 import argparse
-import json
-import os
 import sys
 
 import yaml
 
-from gogtool import lgog
-from gogtool.config import configure_gogtool
-from gogtool.library import Library
-from gogtool.log import configure_logger
-from gogtool.main import run_gogtool
+from gogtool.main import initialize_gogtool, run_gogtool
 
 
 parser = argparse.ArgumentParser(
@@ -111,11 +105,6 @@ parser.add_argument(
 )
 
 
-def load_json(filepath):
-    with open(filepath) as fp:
-        return json.load(fp)
-
-
 def load_config(config_file):
     with open(config_file) as f:
         return yaml.load(f)
@@ -123,24 +112,10 @@ def load_config(config_file):
 
 def main():
     args = parser.parse_args()
-
-    log_level = args.debug
-    log_file = os.path.join(os.getcwd(), 'gogtool.log')
-    configure_logger(log_level, log_file)
-
-    config = configure_gogtool()
-    gog_library = load_json(config['lgog_data_path'])
-
-    if not any([args.download, args.launch, args.edit_lgogconfig, args.view]):
-        if Library.is_outdated(gog_library) or args.refresh:
-            print("Updating library data...")
-            lgog.run('--update-cache')
-            gog_library = load_json(config['lgog_data_path'])
-
-    library = Library(gog_library, config)
+    config, library = initialize_gogtool(args)
 
     try:
-        run_gogtool(config, library, args)
+        return run_gogtool(config, library, args, cli=True)
     except KeyboardInterrupt:
         pass
 

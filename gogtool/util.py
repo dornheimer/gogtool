@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import shutil
@@ -138,3 +139,8 @@ def extract_linux_installer(installer, dest):
         text_file
     ]
     run_command(list_files_command, shell=True, ignore_errors=True)
+
+
+def load_json(filepath):
+    with open(filepath) as fp:
+        return json.load(fp)
