@@ -68,7 +68,11 @@ def configure_gogtool(config_file=None):
 
     lgog_config = load_lgog_config(config['lgog_config_path'])
     # User settings have priority
-    config['download_dir'] = config.get('download_dir') or lgog_config['directory']
-    config['lgogdownloader'] = update_config(lgog_config, config.get('lgogdownloader', {}))
+    config['download_dir'] = config.get('download_dir') or \
+        lgog_config['directory']
+    config['lgogdownloader'] = update_config(
+        lgog_config,
+        config.get('lgogdownloader', {})
+    )
 
     return config
