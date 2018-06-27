@@ -12,6 +12,7 @@ class Game:
     def __init__(self, game_data, *, download_dir=None, install_dir=None):
         self._data = game_data
         self.name = game_data['gamename']
+        self.title = game_data['title']
         self.installers = game_data['installers']
         self.linux_available = self.check_linux()
         self.server_files = self.get_server_files()
@@ -20,6 +21,7 @@ class Game:
         self.download_dir = download_dir
         self.install_dir = install_dir
         self.dlc_installed = False
+        self.image_url = None
 
         self.installable_dlcs = self.get_installable_dlcs()
         self.has_dlc = len(self.installable_dlcs) >= 1

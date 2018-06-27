@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% set active_page = list_type %}
+
+{% set title %}{{ list_type }}{% endset %}
+
+{% block content %}
+  {% for game in games %}
+  <div class="game">
+      <div class="game-image-container">
+        <img class="game-image" src="{{ game.image_url }}" alt="{{ game.name }}"></img>
+        {% if active_page == 'installed' and game.needs_update%}
+            <div class="game-status">outdated</div>
+        {% endif %}
+        {% if active_page == 'installed'%}
+        <a href="{{ url_for('launch_game', game=game) }}"
+          class="launch-button">launch</a>
+        {% endif %}
+      </div>
+    <div class="game-title">{{ game.title }}</div>
+  </div>
+  {% endfor %}
+{% endblock %}

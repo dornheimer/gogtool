@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from operator import attrgetter, itemgetter
 
+from gogtool import gogdb
 from gogtool import util
 from gogtool.game import Game
 
@@ -13,6 +14,7 @@ class Library:
     def __init__(self, gog_library, config):
         self.gog_library = gog_library
         self.config = config
+        self.gog_db = gogdb.GOGDB()
 
         self.download_dir = config['download_dir']
         self.install_dir = config['install_dir']
@@ -27,6 +29,9 @@ class Library:
     def __repr__(self):
         class_name = type(self).__name__
         return f"{class_name}({type(self).is_outdated()})"
+
+    def get_all_games(self):
+        return (self.get_game(g['gamename']) for g in self.gog_games)
 
     @property
     def local_games(self):
@@ -67,6 +72,8 @@ class Library:
         except KeyError:
             game_data = self._get_game_data(game_name)
             game = Game(game_data, **kwargs)
+            game_image_id = self.gog_db.get_game_img(game_name)
+            game.image_url = self.make_img_url(game_image_id)
             self._games[game_name] = game
         return game
 
@@ -191,6 +198,10 @@ class Library:
             print(file_path)
         if util.user_confirm("Delete orphaned files?"):
             util.rm_all(orphaned_files)
+
+    def make_img_url(self, image_id):
+        host_num = hash(image_id) % 4 + 1
+        return f'https://images-{host_num}.gog.com/{image_id}_196.jpg'
 
     @staticmethod
     def is_outdated(gog_library):

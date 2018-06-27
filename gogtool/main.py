@@ -32,7 +32,7 @@ def initialize_library(args, config, log_level='warning'):
 
 def get_games(library, category, linux_only):
     game_categories = {
-        'all': library.all_games,
+        'all': library.get_all_games(),
         'downloaded': library.downloaded_games,
         'installed': library.installed_games,
         'outdated': library.outdated_games,
