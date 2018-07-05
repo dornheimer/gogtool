@@ -11,9 +11,15 @@
         {% if active_page == 'installed' and game.needs_update%}
             <div class="game-status">outdated</div>
         {% endif %}
-        {% if active_page == 'installed'%}
+        {% if game.is_installed %}
         <a href="{{ url_for('launch_game', game=game) }}"
           class="launch-button">launch</a>
+        {% elif game.is_downloaded %}
+        <a href="{{ url_for('install_game', game=game) }}"
+          class="launch-button">install</a>
+        {% elif active_page == 'all' %}
+        <a href="{{ url_for('install_game', game=game) }}"
+          class="launch-button">install</a>
         {% endif %}
       </div>
     <div class="game-title">{{ game.title }}</div>

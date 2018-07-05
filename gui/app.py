@@ -35,13 +35,19 @@ def launch_game():
 
 
 @app.route('/download')
-def download_games():
-    pass
+def download_game():
+    game = request.args.get('game')
+    args = Args(download=[game])
+    main(args)
+    return redirect(url_for('list_games', list_type='all'))
 
 
 @app.route('/install')
-def install_games():
-    pass
+def install_game():
+    game = request.args.get('game')
+    args = Args(install=[game])
+    main(args)
+    return redirect(url_for('list_games', list_type='all'))
 
 
 @app.route('/lgogdownloader/edit_config')
